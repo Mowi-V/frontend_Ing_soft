@@ -3,26 +3,56 @@ import { Link } from 'react-router-dom';
 import './Login.css';
 
 function Login() {
-  const [usuario, setUsuario] = useState('');
+  const [mail, setUsuario] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
 
-  function manejarSubmit(evento) {
-    evento.preventDefault();
-    console.log('Usuario:', usuario);
-    console.log('Password:', password);
-  }
+const handleSubmit = async (e) => {
+        // Prevenimos que la página se recargue al enviar el formulario
+        e.preventDefault();
+        setError(null);
+
+        try {
+            // 2. Hacer la petición a tu API REST de Node.js
+            const respuesta = await fetch('/api/usuarios/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo_electronico: mail, contrasena: password })
+            });
+
+            const data = await respuesta.json(); // Extraemos la respuesta del backend[cite: 2]
+
+            // 3. Evaluar la respuesta del backend
+            if (respuesta.status === 200) {
+                // ¡Éxito! Guardamos el token y los datos en el Local Storage[cite: 2]
+                localStorage.setItem('x-token', data.token);
+                localStorage.setItem('usuario_nombre', data.usuario.nombre);
+                localStorage.setItem('usuario_rol', data.usuario.rol);
+                
+                // Redirigir al usuario dependiendo de su rol[cite: 2]
+                // navigate('/dashboard'); // Usar esto si tienen react-router-dom
+                window.location.href = data.usuario.rol === 'P' ? '/dashboard-proveedor' : '/dashboard-cliente'; 
+            } else {
+                // Credenciales incorrectas: Mostrar el mensaje de error del backend[cite: 2]
+                setError(data.msg);
+            }
+        } catch (error) {
+            console.error("Error de red", error);
+            setError("Error de conexión con el servidor.");
+        }
+    };
 
   return (
     <div className="login-page">
       <div className="login-card">
         <h1>Iniciar sesión</h1>
-        <form onSubmit={manejarSubmit}>
+        <form onSubmit={handleSubmit}>
           <div className="login-field">
             <label htmlFor="usuario">Correo</label>
             <input
-              id="usuario"
+              id="mail"
               type="text"
-              value={usuario}
+              value={mail}
               onChange={(e) => setUsuario(e.target.value)}
             />
           </div>
