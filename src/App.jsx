@@ -4,6 +4,7 @@ import Registro from './pages/Registro';
 import RecuperarPassword from './pages/RecuperarPassword';
 import Exploracion from './pages/Exploracion';
 import DetalleServicio from './pages/DetalleServicio';
+import RestablecerPassword from './pages/RestablecerPassword';
 import './App.css';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/recuperar" element={<RecuperarPassword />} />
         <Route path="/exploracion" element={<Exploracion />} />
         <Route path="/servicios/:id" element={<DetalleServicio />} />
+        <Route path="/restablecer-password" element={<RestablecerPassword />} />
       </Routes>
     </BrowserRouter>
   );

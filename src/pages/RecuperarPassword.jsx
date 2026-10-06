@@ -1,15 +1,37 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import './Login.css';
 
 function RecuperarPassword() {
+  const navigate = useNavigate();
   const [correo, setCorreo] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const enviarRecuperacion = async (e) => {
+    e.preventDefault();
+    setError(null);
 
-  function manejarSubmit(evento) {
-    evento.preventDefault();
-    console.log('Correo para recuperar:', correo);
-    setEnviado(true);
+    try {
+            const respuesta = await fetch('/api/recuperacion/solicitar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo_electronico: correo})
+            });
+
+            const data = await respuesta.json(); 
+
+            if (respuesta.status === 200) {
+              alert(data.msg); 
+              navigate("/login");
+
+            } else {
+                setError(data.msg);
+            }
+        } catch (error) {
+            console.error("Error de red", error);
+            setError("Error de conexión con el servidor.");
+        }
   }
 
   return (
@@ -28,7 +50,7 @@ function RecuperarPassword() {
           </>
         ) : (
           <>
-            <form onSubmit={manejarSubmit}>
+            <form onSubmit={enviarRecuperacion}>
               <div className="login-field">
                 <label htmlFor="correo">Correo</label>
                 <input

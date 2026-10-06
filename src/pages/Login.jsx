@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 import './Login.css';
 
 function Login() {
@@ -8,23 +8,21 @@ function Login() {
   const [error, setError] = useState(null);
 
 const handleSubmit = async (e) => {
-        // Prevenimos que la página se recargue al enviar el formulario
+
         e.preventDefault();
         setError(null);
 
         try {
-            // 2. Hacer la petición a tu API REST de Node.js
             const respuesta = await fetch('/api/usuarios/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ correo_electronico: mail, contrasena: password })
             });
 
-            const data = await respuesta.json(); // Extraemos la respuesta del backend[cite: 2]
+            const data = await respuesta.json(); 
 
             // 3. Evaluar la respuesta del backend
             if (respuesta.status === 200) {
-                // ¡Éxito! Guardamos el token y los datos en el Local Storage[cite: 2]
                 localStorage.setItem('x-token', data.token);
                 localStorage.setItem('usuario_nombre', data.usuario.nombre);
                 localStorage.setItem('usuario_rol', data.usuario.rol);

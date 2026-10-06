@@ -5,7 +5,6 @@ import './Login.css';
 function Registro() {
 
   const navigate = useNavigate();
-  // Estados originales del componente
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [correo, setCorreo] = useState('');
@@ -22,7 +21,6 @@ function Registro() {
   const [idBarrio, setIdBarrio] = useState('');
   const [informacionComplementaria, setInformacionComplementaria] = useState('');
 
-  // Cargar las ciudades desde el backend al montar el componente
   useEffect(() => {
     const obtenerUbicaciones = async () => {
       try {
@@ -38,11 +36,10 @@ function Registro() {
     obtenerUbicaciones();
   }, []);
 
-  // Filtrar barrios dependiendo de la ciudad seleccionada
   const manejarCambioCiudad = (e) => {
     const ciudadSeleccionada = e.target.value;
     setIdCiudad(ciudadSeleccionada);
-    setIdBarrio(''); // Limpiar el barrio si se cambia la ciudad
+    setIdBarrio(''); 
 
     const ciudadEncontrada = ciudades.find(c => c.id_ciudad.toString() === ciudadSeleccionada);
     if (ciudadEncontrada && ciudadEncontrada.Barrios) {
@@ -67,26 +64,24 @@ function Registro() {
   }
 
 const handleSubmit = async (e) => {
-    // 1. Prevenimos que la página se recargue al enviar el formulario
+
     e.preventDefault();
     setError(null);
 
-    // 2. Validación de contraseñas local[cite: 4]
     if (password !== confirmarPassword) {
       setError('Las contraseñas no coinciden');
       return;
     }
 
-    // 3. Construimos el objeto de datos (payload) que espera el backend
     const payload = {
         nombre,
         apellido,
-        correo_electronico: correo, // Mapeo al nombre que espera la BD
-        contrasena: password,       // Mapeo al nombre que espera la BD
-        rol                         // Envía 'cliente' o 'proveedor'
+        correo_electronico: correo, 
+        contrasena: password,       
+        rol                        
     };
 
-    // 4. Añadimos los campos específicos según el rol seleccionado[cite: 4]
+
     if (rol === 'cliente') {
         payload.id_ciudad = parseInt(idCiudad);
         payload.id_barrio = parseInt(idBarrio);
@@ -97,23 +92,20 @@ const handleSubmit = async (e) => {
     }
 
     try {
-        // 5. Hacer la petición POST a tu API REST de registro
         const respuesta = await fetch('/api/usuarios/registro', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        const data = await respuesta.json(); // Extraemos la respuesta del backend
+        const data = await respuesta.json(); 
 
-        // 6. Evaluar la respuesta del backend (Código 201 significa Creado)
+
         if (respuesta.status === 201) {
-            // ¡Éxito! El usuario fue registrado. 
-            // Mostramos una alerta (opcional) y redirigimos al Login.
+
             alert('Cuenta creada exitosamente. Ahora puedes iniciar sesión.');
             navigate('/login');
         } else {
-            // Error de validación en el backend (ej. correo ya existe, faltan campos)
             setError(data.msg || JSON.stringify(data.errores || 'Error al registrar la cuenta'));
         }
     } catch (error) {
@@ -190,7 +182,7 @@ const handleSubmit = async (e) => {
             </select>
           </div>
 
-          {/* 🌟 CAMPOS EXCLUSIVOS PARA EL CLIENTE */}
+          {/* CAMPOS EXCLUSIVOS PARA EL CLIENTE */}
           {rol === 'cliente' && (
             <>
               <div className="login-field">
