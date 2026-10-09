@@ -3,12 +3,14 @@ import { Link, useNavigate} from 'react-router-dom';
 import './Login.css';
 
 function Login() {
+  const navigate = useNavigate();
   const [mail, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
 const handleSubmit = async (e) => {
 
+        
         e.preventDefault();
         setError(null);
 
@@ -28,11 +30,15 @@ const handleSubmit = async (e) => {
                 localStorage.setItem('usuario_rol', data.usuario.rol);
                 
                 // Redirigir al usuario dependiendo de su rol[cite: 2]
-                // navigate('/dashboard'); // Usar esto si tienen react-router-dom
-                window.location.href = data.usuario.rol === 'P' ? '/dashboard-proveedor' : '/dashboard-cliente'; 
+                if(data.usuario.rol === 'P'){
+                  navigate('/dashboard-proveedor');
+                }else{
+                  navigate('/dashboard-cliente');
+                }
             } else {
                 // Credenciales incorrectas: Mostrar el mensaje de error del backend[cite: 2]
                 setError(data.msg);
+                alert(data.msg)
             }
         } catch (error) {
             console.error("Error de red", error);

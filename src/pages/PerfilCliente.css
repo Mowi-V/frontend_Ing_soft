@@ -1,0 +1,181 @@
+.perfil-cliente-wrapper {
+    background-color: #f6f7f9;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+}
+
+.perfil-container {
+    max-width: 800px;
+    margin: 32px auto;
+    padding: 0 20px;
+}
+
+.perfil-header-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.perfil-avatar-grande {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+}
+
+.perfil-header-card h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.4rem;
+    color: #111827;
+}
+
+.perfil-subtexto {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.perfil-form-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 28px;
+}
+
+.perfil-top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.estado-edicion-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.modo-lectura {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.modo-edicion {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.btn-activar-edicion {
+    background-color: #18181b;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-cancelar-edicion {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.form-fila {
+    display: flex;
+    gap: 16px;
+}
+
+.form-fila .form-grupo {
+    flex: 1;
+}
+
+.form-grupo {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-grupo label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #374151;
+}
+
+.form-grupo input, 
+.form-grupo select, 
+.form-grupo textarea {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.input-bloqueado {
+    background-color: #f9fafb !important;
+    color: #4b5563 !important;
+    border-color: #e5e7eb !important;
+    cursor: not-allowed;
+}
+
+.form-acciones {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-guardar {
+    background-color: #059669;
+    color: #ffffff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.alerta-exito {
+    background-color: #d1fae5;
+    color: #065f46;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+.alerta-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+.perfil-cargando {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-size: 1.1rem;
+    color: #6b7280;
+}

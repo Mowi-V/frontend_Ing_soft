@@ -1,0 +1,240 @@
+.prov-dashboard-wrapper {
+    background-color: #f6f7f9;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+}
+
+.prov-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.prov-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.prov-header-actions h2 {
+    margin: 0 0 6px 0;
+    font-size: 1.45rem;
+    color: #111827;
+}
+
+.prov-subtexto {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #6b7280;
+}
+
+.btn-crear-servicio {
+    background-color: #18181b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-crear-servicio:hover {
+    background-color: #27272a;
+}
+
+.prov-grid-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.prov-services-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.prov-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.prov-card:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.prov-card.card-activa {
+    border-color: #18181b;
+    box-shadow: 0 0 0 2px #18181b;
+}
+
+.prov-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.prov-pill-cat {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #4b5563;
+    background-color: #f3f4f6;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.prov-pill-estado {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 9999px;
+}
+
+.prov-pill-estado.activo {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.prov-pill-estado.inactivo {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.prov-card-title {
+    margin: 0 0 8px 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.prov-card-desc {
+    font-size: 0.88rem;
+    color: #6b7280;
+    line-height: 1.4;
+    margin: 0 0 16px 0;
+    flex: 1;
+}
+
+.prov-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.prov-card-precio {
+    font-weight: 700;
+    color: #111827;
+    font-size: 1.05rem;
+}
+
+.prov-card-hint {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-align: right;
+    margin-top: 8px;
+}
+
+/* Panel de Edición Lateral */
+.prov-edit-panel {
+    width: 360px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    position: sticky;
+    top: 20px;
+}
+
+.edit-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.edit-panel-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.btn-cerrar-panel {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.edit-panel-aviso {
+    font-size: 0.82rem;
+    color: #6b7280;
+    background: #f9fafb;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    line-height: 1.35;
+}
+
+.edit-form-mock {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.edit-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #374151;
+}
+
+.edit-field input,
+.edit-field select,
+.edit-field textarea {
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.edit-actions {
+    margin-top: 10px;
+}
+
+.btn-guardar-mock {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: not-allowed;
+}
