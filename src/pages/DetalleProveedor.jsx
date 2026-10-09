@@ -229,7 +229,7 @@ export default function DetalleProveedor() {
                                     onClick={() => {
                                         const s = servicioSeleccionado;
                                         setServicioSeleccionado(null);
-                                        alert(`Procediendo a crear solicitud para ${s.nombre} (HU-012)`);
+                                        alert(`para el proximo sprint`);
                                     }}
                                 >
                                     Reservar este Servicio
