@@ -1,60 +1,34 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavbarProveedor from '../components/NavbarProveedor';
+import { serviciosService } from '../services/servicios.service';
 import './DashboardProveedor.css';
 
 export default function DashboardProveedor() {
     const navigate = useNavigate();
     const [servicios, setServicios] = useState([]);
-    const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState(null);
-    const [mensajeExito, setMensajeExito] = useState(null);
-
-    // Estado del servicio seleccionado para edición
     const [servicioSeleccionado, setServicioSeleccionado] = useState(null);
     const [formEdit, setFormEdit] = useState({
         nombre: '',
-        categoria: 'Masajes',
-        descripcion: '',
+        categoria: 'Estética',
         duracion_minutos: '',
         precio: '',
-        estado: 'A'
+        estado: 'A',
+        descripcion: ''
     });
+    const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
+    const [error, setError] = useState(null);
+    const [mensaje, setMensaje] = useState(null);
 
-    // 1. Cargar servicios del proveedor autenticado
     const cargarServicios = async () => {
-        const token = localStorage.getItem('x-token');
-        const rol = localStorage.getItem('usuario_rol');
-
-        if (!token || rol !== 'P') {
-            navigate('/login');
-            return;
-        }
-
         setCargando(true);
         setError(null);
-
         try {
-            const res = await fetch('/api/servicios/mis-servicios', {
-                headers: { 'x-token': token }
-            });
-
-            if (res.status === 401) {
-                localStorage.removeItem('x-token');
-                navigate('/login');
-                return;
-            }
-
-            const data = await res.json();
-            if (res.ok) {
-                setServicios(data.servicios || []);
-            } else {
-                setError(data.msg || 'Error al obtener tus servicios');
-            }
+            const data = await serviciosService.obtenerMisServicios();
+            setServicios(data.servicios || []);
         } catch (err) {
-            console.error(err);
-            setError('Error de conexión con el servidor');
+            setError(err.message || 'Error al cargar los servicios');
         } finally {
             setCargando(false);
         }
@@ -64,70 +38,40 @@ export default function DashboardProveedor() {
         cargarServicios();
     }, []);
 
-    // 2. Al hacer clic en una tarjeta, llenar el panel de edición
     const seleccionarParaEditar = (s) => {
         setServicioSeleccionado(s);
         setFormEdit({
             nombre: s.nombre,
             categoria: s.categoria,
-            descripcion: s.descripcion,
             duracion_minutos: s.duracion_minutos,
             precio: s.precio,
-            estado: s.estado
+            estado: s.estado,
+            descripcion: s.descripcion || ''
         });
-        setMensajeExito(null);
+        setMensaje(null);
         setError(null);
     };
 
-    // 3. Manejo de cambios en el formulario de edición
-    const handleChangeEdit = (e) => {
+    const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormEdit(prev => ({ ...prev, [name]: value }));
     };
 
-    // 4. Enviar actualización a la API (HU-007)
     const handleGuardarCambios = async (e) => {
         e.preventDefault();
         if (!servicioSeleccionado) return;
 
         setGuardando(true);
         setError(null);
-        setMensajeExito(null);
-        const token = localStorage.getItem('x-token');
+        setMensaje(null);
 
         try {
-            const res = await fetch(`/api/servicios/${servicioSeleccionado.id_servicio}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-token': token
-                },
-                body: JSON.stringify(formEdit)
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                setMensajeExito('¡Servicio actualizado correctamente!');
-                // Actualizar la lista en el estado local sin recargar la pantalla
-                setServicios(prev =>
-                    prev.map(serv =>
-                        serv.id_servicio === servicioSeleccionado.id_servicio
-                            ? { ...serv, ...formEdit, duracion_minutos: parseInt(formEdit.duracion_minutos), precio: parseFloat(formEdit.precio) }
-                            : serv
-                    )
-                );
-                // Actualizar la tarjeta seleccionada
-                setServicioSeleccionado(prev => ({
-                    ...prev,
-                    ...formEdit
-                }));
-            } else {
-                setError(data.msg || 'No se pudo actualizar el servicio');
-            }
+            await serviciosService.actualizarServicio(servicioSeleccionado.id_servicio, formEdit);
+            setMensaje('Servicio actualizado con éxito.');
+            await cargarServicios();
+            setServicioSeleccionado(null);
         } catch (err) {
-            console.error(err);
-            setError('Error de conexión al guardar los cambios');
+            setError(err.message || 'Error al actualizar el servicio.');
         } finally {
             setGuardando(false);
         }
@@ -138,93 +82,105 @@ export default function DashboardProveedor() {
             <NavbarProveedor />
 
             <main className="prov-container">
-                <header className="prov-header-actions">
-                    <div>
-                        <h2>Mis Servicios Registrados</h2>
-                        <p className="prov-subtexto">
+                {/* Cabecera Principal */}
+                <div className="prov-header-actions">
+                    <div className="prov-header-text">
+                        <h1 className="prov-title">Mis Servicios Registrados</h1>
+                        <p className="prov-subtitle">
                             Gestiona tu catálogo, actualiza tarifas o cambia la disponibilidad de tus publicaciones.
                         </p>
                     </div>
                     <button 
+                        type="button"
                         className="btn-crear-servicio"
                         onClick={() => navigate('/crear-servicio')}
                     >
                         + Crear un Servicio
                     </button>
-                </header>
+                </div>
 
-                {error && <div className="alerta-error">{error}</div>}
-                {mensajeExito && <div className="alerta-exito">{mensajeExito}</div>}
+                {mensaje && <div className="prov-alert-success">{mensaje}</div>}
+                {error && <div className="prov-alert-error">{error}</div>}
 
                 {cargando ? (
-                    <p style={{ color: '#6b7280' }}>Cargando catálogo...</p>
+                    <p className="prov-loading-text">Cargando catálogo de servicios...</p>
                 ) : (
-                    <div className="prov-grid-layout">
-                        {/* Listado de servicios reales del proveedor */}
-                        <section className="prov-services-grid">
+                    <div className="prov-layout-body">
+                        {/* Grilla de Tarjetas */}
+                        <section className="prov-cards-grid">
                             {servicios.length === 0 ? (
-                                <p style={{ color: '#6b7280', gridColumn: '1 / -1' }}>
-                                    Aún no has registrado ningún servicio. Haz clic en "+ Crear un Servicio" para comenzar.
+                                <p className="prov-empty-text">
+                                    No tienes servicios registrados aún. Haz clic en "+ Crear un Servicio" para comenzar.
                                 </p>
                             ) : (
                                 servicios.map((s) => (
                                     <article 
                                         key={s.id_servicio} 
-                                        className={`prov-card ${servicioSeleccionado?.id_servicio === s.id_servicio ? 'card-activa' : ''}`}
+                                        className={`prov-service-card ${servicioSeleccionado?.id_servicio === s.id_servicio ? 'card-seleccionada' : ''}`}
                                         onClick={() => seleccionarParaEditar(s)}
                                     >
                                         <div className="prov-card-header">
-                                            <span className="prov-pill-cat">{s.categoria}</span>
-                                            <span className={`prov-pill-estado ${s.estado === 'A' ? 'activo' : 'inactivo'}`}>
+                                            <span className="prov-badge-cat">
+                                                {s.categoria ? s.categoria.toUpperCase() : 'GENERAL'}
+                                            </span>
+                                            <span className={`prov-badge-estado ${s.estado === 'A' ? 'estado-activo' : 'estado-inactivo'}`}>
                                                 {s.estado === 'A' ? 'Activo' : 'Inactivo'}
                                             </span>
                                         </div>
-                                        
-                                        <h3 className="prov-card-title">{s.nombre}</h3>
-                                        <p className="prov-card-desc">{s.descripcion}</p>
-                                        
-                                        <div className="prov-card-meta">
-                                            <span>⏱ {s.duracion_minutos} min</span>
-                                            <span className="prov-card-precio">${Number(s.precio).toLocaleString()}</span>
+
+                                        <h3 className="prov-card-name">{s.nombre}</h3>
+                                        <p className="prov-card-desc">{s.descripcion || 'Sin descripción'}</p>
+
+                                        <div className="prov-card-footer">
+                                            <div className="prov-card-duration">
+                                                <span className="prov-clock-icon">⏱</span> {s.duracion_minutos} min
+                                            </div>
+                                            <div className="prov-card-price-group">
+                                                <span className="prov-card-price">
+                                                    ${Number(s.precio).toLocaleString()}
+                                                </span>
+                                                <span className="prov-card-edit-hint">Haz clic para editar</span>
+                                            </div>
                                         </div>
-                                        <span className="prov-card-hint">Haz clic para editar</span>
                                     </article>
                                 ))
                             )}
                         </section>
 
-                        {/* Panel lateral de edición funcional */}
+                        {/* Panel Lateral de Edición */}
                         {servicioSeleccionado && (
-                            <aside className="prov-edit-panel">
-                                <div className="edit-panel-header">
+                            <aside className="prov-edit-drawer">
+                                <div className="drawer-header">
                                     <h3>Editar Servicio</h3>
                                     <button 
-                                        className="btn-cerrar-panel" 
+                                        type="button" 
+                                        className="btn-close-drawer"
                                         onClick={() => setServicioSeleccionado(null)}
                                     >
                                         ✕
                                     </button>
                                 </div>
 
-                                <form className="edit-form-mock" onSubmit={handleGuardarCambios}>
-                                    <div className="edit-field">
-                                        <label>Nombre del Servicio *</label>
+                                <form onSubmit={handleGuardarCambios} className="drawer-form">
+                                    <div className="drawer-field">
+                                        <label htmlFor="nombre">Nombre</label>
                                         <input 
+                                            id="nombre"
                                             type="text" 
-                                            name="nombre"
+                                            name="nombre" 
                                             value={formEdit.nombre} 
-                                            onChange={handleChangeEdit}
+                                            onChange={handleInputChange} 
                                             required 
                                         />
                                     </div>
 
-                                    <div className="edit-field">
-                                        <label>Categoría *</label>
+                                    <div className="drawer-field">
+                                        <label htmlFor="categoria">Categoría</label>
                                         <select 
-                                            name="categoria"
+                                            id="categoria"
+                                            name="categoria" 
                                             value={formEdit.categoria} 
-                                            onChange={handleChangeEdit}
-                                            required
+                                            onChange={handleInputChange}
                                         >
                                             <option value="Estética">Estética</option>
                                             <option value="Bienestar">Bienestar</option>
@@ -232,62 +188,70 @@ export default function DashboardProveedor() {
                                         </select>
                                     </div>
 
-                                    <div className="edit-field">
-                                        <label>Duración (minutos) *</label>
-                                        <input 
-                                            type="number" 
-                                            name="duracion_minutos"
-                                            value={formEdit.duracion_minutos} 
-                                            onChange={handleChangeEdit}
-                                            min="1"
-                                            required 
-                                        />
+                                    <div className="drawer-row">
+                                        <div className="drawer-field">
+                                            <label htmlFor="duracion_minutos">Duración (min)</label>
+                                            <input 
+                                                id="duracion_minutos"
+                                                type="number" 
+                                                name="duracion_minutos" 
+                                                value={formEdit.duracion_minutos} 
+                                                onChange={handleInputChange} 
+                                                required 
+                                            />
+                                        </div>
+                                        <div className="drawer-field">
+                                            <label htmlFor="estado">Estado</label>
+                                            <select 
+                                                id="estado"
+                                                name="estado" 
+                                                value={formEdit.estado} 
+                                                onChange={handleInputChange}
+                                            >
+                                                <option value="A">Activo</option>
+                                                <option value="I">Inactivo</option>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    <div className="edit-field">
-                                        <label>Precio ($ COP) *</label>
+                                    <div className="drawer-field">
+                                        <label htmlFor="precio">Precio ($)</label>
                                         <input 
+                                            id="precio"
                                             type="number" 
-                                            name="precio"
+                                            name="precio" 
                                             value={formEdit.precio} 
-                                            onChange={handleChangeEdit}
-                                            min="0"
-                                            step="1000"
+                                            onChange={handleInputChange} 
                                             required 
                                         />
                                     </div>
 
-                                    <div className="edit-field">
-                                        <label>Estado de Publicación</label>
-                                        <select 
-                                            name="estado"
-                                            value={formEdit.estado} 
-                                            onChange={handleChangeEdit}
-                                        >
-                                            <option value="A">Activo (Visible para clientes)</option>
-                                            <option value="I">Inactivo (Oculto)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="edit-field">
-                                        <label>Descripción *</label>
+                                    <div className="drawer-field">
+                                        <label htmlFor="descripcion">Descripción</label>
                                         <textarea 
+                                            id="descripcion"
+                                            name="descripcion" 
                                             rows="3" 
-                                            name="descripcion"
                                             value={formEdit.descripcion} 
-                                            onChange={handleChangeEdit}
+                                            onChange={handleInputChange} 
                                             required 
                                         />
                                     </div>
 
-                                    <div className="edit-actions">
+                                    <div className="drawer-buttons">
                                         <button 
                                             type="submit" 
-                                            className="btn-guardar" 
-                                            style={{ width: '100%' }}
+                                            className="btn-drawer-save"
                                             disabled={guardando}
                                         >
-                                            {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
+                                            {guardando ? 'Guardando...' : 'Guardar Cambios'}
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            className="btn-drawer-cancel"
+                                            onClick={() => setServicioSeleccionado(null)}
+                                        >
+                                            Cerrar
                                         </button>
                                     </div>
                                 </form>

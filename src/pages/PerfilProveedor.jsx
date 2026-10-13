@@ -1,230 +1,179 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import NavbarProveedor from '../components/NavbarProveedor';
+import { proveedoresService } from '../services/proveedores.service';
+import { ubicacionesService } from '../services/ubicaciones.service';
 import './PerfilProveedor.css';
 
 export default function PerfilProveedor() {
-    const navigate = useNavigate();
+    const [cargando, setCargando] = useState(true);
     const [editando, setEditando] = useState(false);
+    const [guardando, setGuardando] = useState(false);
+    const [agregandoZona, setAgregandoZona] = useState(false);
+    const [error, setError] = useState(null);
+    const [mensaje, setMensaje] = useState(null);
 
-    // Datos personales y profesionales
-    const [correo, setCorreo] = useState('');
-    const [nombre, setNombre] = useState('');
-    const [apellido, setApellido] = useState('');
-    const [descripcionPerfil, setDescripcionPerfil] = useState('');
-
-    // Zonas de atención registradas
-    const [zonas, setZonas] = useState([]);
-
-    // Selectores para añadir nueva zona
     const [ciudades, setCiudades] = useState([]);
     const [barriosDisponibles, setBarriosDisponibles] = useState([]);
-    const [ciudadSeleccionada, setCiudadSeleccionada] = useState('');
-    const [barrioSeleccionado, setBarrioSeleccionado] = useState('');
 
-    const [mensaje, setMensaje] = useState(null);
-    const [error, setError] = useState(null);
-    const [cargando, setCargando] = useState(true);
+    const [perfil, setPerfil] = useState({
+        correo_electronico: '',
+        nombre: '',
+        apellido: '',
+        descripcion_perfil: '',
+        zonas: []
+    });
 
-    // Carga de datos iniciales
-    useEffect(() => {
-        const token = localStorage.getItem('x-token');
-        const rol = localStorage.getItem('usuario_rol');
+    const [zonaForm, setZonaForm] = useState({
+        id_ciudad: '',
+        id_barrio: ''
+    });
 
-        if (!token || rol !== 'P') {
-            navigate('/login');
-            return;
+    const cargarDatos = async () => {
+        try {
+            const [dataPerfil, dataUbicaciones] = await Promise.all([
+                proveedoresService.obtenerMiPerfil(),
+                ubicacionesService.obtenerUbicaciones()
+            ]);
+
+            setCiudades(dataUbicaciones || []);
+
+            
+            const p = dataPerfil?.perfil || dataPerfil?.proveedor || dataPerfil || {};
+
+            
+            const zonasRecibidas = p.zonas || p.zonas_atencion || p.ZonaAtencions || [];
+
+            setPerfil({
+                correo_electronico: p.correo_electronico || '',
+                nombre: p.nombre || '',
+                apellido: p.apellido || '',
+                descripcion_perfil: p.descripcion_perfil || '',
+                zonas: Array.isArray(zonasRecibidas) ? zonasRecibidas : []
+            });
+        } catch (err) {
+            console.error('Error al cargar datos del proveedor:', err);
+            setError(err.message || 'Error al cargar la información del proveedor.');
+        } finally {
+            setCargando(false);
         }
-
-        const cargarInformacion = async () => {
-            try {
-                // Diccionarios
-                const resUbic = await fetch('/api/ubicaciones');
-                const dataUbic = await resUbic.json();
-                setCiudades(dataUbic.ciudades || []);
-
-                // Perfil
-                const resPerfil = await fetch('/api/proveedores/perfil', {
-                    headers: { 'x-token': token }
-                });
-
-                if (resPerfil.status === 401) {
-                    navigate('/login');
-                    return;
-                }
-
-                const dataPerfil = await resPerfil.json();
-                if (resPerfil.ok && dataPerfil.perfil) {
-                    const p = dataPerfil.perfil;
-                    setCorreo(p.correo_electronico || '');
-                    setNombre(p.nombre || '');
-                    setApellido(p.apellido || '');
-                    setDescripcionPerfil(p.descripcion_perfil || '');
-                    setZonas(p.zonas || []);
-                }
-            } catch (err) {
-                console.error(err);
-                setError('Error al consultar datos del proveedor');
-            } finally {
-                setCargando(false);
-            }
-        };
-
-        cargarInformacion();
-    }, [navigate]);
-
-    // Filtrar barrios cuando cambia la ciudad en el formulario de zona
-    const handleCiudadChange = (e) => {
-        const idC = e.target.value;
-        setCiudadSeleccionada(idC);
-        setBarrioSeleccionado('');
-
-        const ciudadObj = ciudades.find(c => c.id_ciudad === Number(idC));
-        setBarriosDisponibles(ciudadObj ? ciudadObj.Barrios || [] : []);
     };
 
-    // Guardar cambios del perfil personal
+    useEffect(() => {
+        cargarDatos();
+    }, []);
+
+    const handleCiudadZonaChange = (e) => {
+        const idCiudad = e.target.value;
+        setZonaForm({ id_ciudad: idCiudad, id_barrio: '' });
+        const c = ciudades.find(ciu => String(ciu.id_ciudad) === String(idCiudad));
+        setBarriosDisponibles(c ? c.Barrios || [] : []);
+    };
+
     const handleGuardarPerfil = async (e) => {
         e.preventDefault();
+        setGuardando(true);
         setError(null);
         setMensaje(null);
 
-        const token = localStorage.getItem('x-token');
         try {
-            const res = await fetch('/api/proveedores/perfil', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-token': token
-                },
-                body: JSON.stringify({
-                    nombre,
-                    apellido,
-                    descripcion_perfil: descripcionPerfil
-                })
+            await proveedoresService.actualizarMiPerfil({
+                nombre: perfil.nombre,
+                apellido: perfil.apellido,
+                descripcion_perfil: perfil.descripcion_perfil
             });
-
-            const data = await res.json();
-            if (res.ok) {
-                setMensaje('Información profesional actualizada exitosamente.');
-                localStorage.setItem('usuario_nombre', nombre);
-                setEditando(false);
-            } else {
-                setError(data.msg || 'Error al actualizar el perfil.');
-            }
+            setMensaje('Perfil profesional actualizado correctamente.');
+            setEditando(false);
         } catch (err) {
-            console.error(err);
-            setError('Error de conexión al guardar cambios.');
+            setError(err.message || 'Error al guardar los cambios del perfil.');
+        } finally {
+            setGuardando(false);
         }
     };
 
-    // Registrar nueva zona de atención (1 por barrio)
     const handleAgregarZona = async (e) => {
         e.preventDefault();
-        if (!ciudadSeleccionada || !barrioSeleccionado) return;
+        if (!zonaForm.id_ciudad || !zonaForm.id_barrio) return;
 
+        setAgregandoZona(true);
         setError(null);
-        setMensaje(null);
-        const token = localStorage.getItem('x-token');
-
         try {
-            const res = await fetch('/api/proveedores/zonas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-token': token
-                },
-                body: JSON.stringify({
-                    id_ciudad: parseInt(ciudadSeleccionada),
-                    id_barrio: parseInt(barrioSeleccionado)
-                })
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                // Re-consultar perfil para refrescar lista con nombres relacionales
-                const resPerfil = await fetch('/api/proveedores/perfil', {
-                    headers: { 'x-token': token }
-                });
-                const dataActualizada = await resPerfil.json();
-                setZonas(dataActualizada.perfil?.zonas || []);
-                setBarrioSeleccionado('');
-                setMensaje('Zona de atención agregada.');
-            } else {
-                setError(data.msg || 'No se pudo agregar la zona.');
-            }
+            await proveedoresService.agregarZona(
+                parseInt(zonaForm.id_ciudad, 10),
+                parseInt(zonaForm.id_barrio, 10)
+            );
+            setZonaForm({ id_ciudad: '', id_barrio: '' });
+            await cargarDatos();
         } catch (err) {
-            console.error(err);
-            setError('Error de conexión al agregar zona.');
+            setError(err.message || 'Error al registrar la zona de atención.');
+        } finally {
+            setAgregandoZona(false);
         }
     };
 
-    // Eliminar una zona de atención
-    const handleEliminarZona = async (id_zona) => {
-        setError(null);
-        const token = localStorage.getItem('x-token');
-
+    const handleEliminarZona = async (idZona) => {
         try {
-            const res = await fetch(`/api/proveedores/zonas/${id_zona}`, {
-                method: 'DELETE',
-                headers: { 'x-token': token }
-            });
-
-            if (res.ok) {
-                setZonas(prev => prev.filter(z => z.id_zona !== id_zona));
-            } else {
-                const data = await res.json();
-                setError(data.msg || 'No se pudo eliminar la zona.');
-            }
+            await proveedoresService.eliminarZona(idZona);
+            await cargarDatos();
         } catch (err) {
-            console.error(err);
-            setError('Error de conexión al eliminar zona.');
+            setError(err.message || 'Error al retirar la zona de atención.');
         }
     };
 
-    // Agrupación de zonas por Ciudad para la vista
-    const zonasAgrupadasPorCiudad = zonas.reduce((acc, zona) => {
-        const nombreCiudad = zona.Ciudad?.nombre || 'Ciudad';
+    // Agrupar zonas por el nombre de la ciudad
+    const zonasAgrupadasPorCiudad = perfil.zonas.reduce((acc, z) => {
+        const nombreCiudad = z.Ciudad?.nombre || z.ciudad || 'Ciudad no especificada';
         if (!acc[nombreCiudad]) acc[nombreCiudad] = [];
-        acc[nombreCiudad].push(zona);
+        acc[nombreCiudad].push(z);
         return acc;
     }, {});
 
-    if (cargando) return <div className="perfil-cargando">Cargando perfil del profesional...</div>;
+    if (cargando) {
+        return (
+            <div className="perfil-prov-wrapper">
+                <NavbarProveedor />
+                <div className="perfil-prov-cargando">Cargando datos de la cuenta...</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="perfil-proveedor-wrapper">
+        <div className="perfil-prov-wrapper">
             <NavbarProveedor />
 
-            <main className="perfil-container">
-                {/* Cabecera idéntica al perfil del cliente */}
+            <main className="perfil-prov-container">
+                {/* Tarjeta 1: Cabecera con Avatar */}
                 <div className="perfil-header-card">
-                    <div className="perfil-avatar-grande"></div>
-                    <div>
-                        <h2>Mi Cuenta (Proveedor)</h2>
-                        <p className="perfil-subtexto">Consulta y administra tus credenciales profesionales y zonas de cobertura</p>
+                    <div className="perfil-avatar-circle"></div>
+                    <div className="perfil-header-text">
+                        <h1 className="perfil-header-title">Mi Cuenta (Proveedor)</h1>
+                        <p className="perfil-header-subtitle">
+                            Consulta y administra tus credenciales profesionales y zonas de cobertura
+                        </p>
                     </div>
                 </div>
 
-                {/* TARJETA 1: INFORMACIÓN PROFESIONAL */}
-                <div className="perfil-form-card">
+                {mensaje && <div className="perfil-prov-alerta-exito">{mensaje}</div>}
+                {error && <div className="perfil-prov-alerta-error">{error}</div>}
+
+                {/* Tarjeta 2: Formulario de Datos Profesionales */}
+                <div className="perfil-card-bloque">
                     <div className="perfil-top-actions">
-                        <span className={`estado-edicion-badge ${editando ? 'modo-edicion' : 'modo-lectura'}`}>
+                        <span className={`perfil-badge-estado ${editando ? 'modo-edicion' : 'modo-lectura'}`}>
                             {editando ? 'Modo Edición Activado' : 'Campos Bloqueados (Solo Lectura)'}
                         </span>
 
                         {!editando ? (
-                            <button 
-                                type="button" 
-                                className="btn-activar-edicion" 
-                                onClick={() => { setEditando(true); setMensaje(null); }}
+                            <button
+                                type="button"
+                                className="btn-actualizar-campos"
+                                onClick={() => { setEditando(true); setMensaje(null); setError(null); }}
                             >
                                 ✏️ Actualizar campos
                             </button>
                         ) : (
-                            <button 
-                                type="button" 
-                                className="btn-cancelar-edicion" 
+                            <button
+                                type="button"
+                                className="btn-cancelar-edicion"
                                 onClick={() => setEditando(false)}
                             >
                                 Cancelar
@@ -232,122 +181,144 @@ export default function PerfilProveedor() {
                         )}
                     </div>
 
-                    {mensaje && <div className="alerta-exito">{mensaje}</div>}
-                    {error && <div className="alerta-error">{error}</div>}
-
-                    <form onSubmit={handleGuardarPerfil}>
-                        <div className="form-grupo">
-                            <label>Correo Electrónico (No modificable):</label>
-                            <input type="email" value={correo} disabled className="input-bloqueado" />
+                    <form onSubmit={handleGuardarPerfil} className="perfil-prov-form">
+                        <div className="perfil-form-group">
+                            <label htmlFor="correo">Correo Electrónico (No modificable):</label>
+                            <input
+                                id="correo"
+                                type="email"
+                                value={perfil.correo_electronico}
+                                disabled
+                                className="input-bloqueado"
+                            />
                         </div>
 
-                        <div className="form-fila">
-                            <div className="form-grupo">
-                                <label>Nombre *:</label>
-                                <input 
-                                    type="text" 
-                                    value={nombre} 
-                                    onChange={(e) => setNombre(e.target.value)} 
+                        <div className="perfil-form-row">
+                            <div className="perfil-form-group">
+                                <label htmlFor="nombre">Nombre *:</label>
+                                <input
+                                    id="nombre"
+                                    type="text"
+                                    value={perfil.nombre}
+                                    onChange={(e) => setPerfil({ ...perfil, nombre: e.target.value })}
                                     disabled={!editando}
                                     className={!editando ? 'input-bloqueado' : ''}
-                                    required 
+                                    required
                                 />
                             </div>
-                            <div className="form-grupo">
-                                <label>Apellido *:</label>
-                                <input 
-                                    type="text" 
-                                    value={apellido} 
-                                    onChange={(e) => setApellido(e.target.value)} 
+                            <div className="perfil-form-group">
+                                <label htmlFor="apellido">Apellido *:</label>
+                                <input
+                                    id="apellido"
+                                    type="text"
+                                    value={perfil.apellido}
+                                    onChange={(e) => setPerfil({ ...perfil, apellido: e.target.value })}
                                     disabled={!editando}
                                     className={!editando ? 'input-bloqueado' : ''}
-                                    required 
+                                    required
                                 />
                             </div>
                         </div>
 
-                        <div className="form-grupo">
-                            <label>Descripción del Perfil Profesional *:</label>
-                            <textarea 
-                                rows="3" 
-                                value={descripcionPerfil} 
-                                onChange={(e) => setDescripcionPerfil(e.target.value)} 
+                        <div className="perfil-form-group">
+                            <label htmlFor="descripcion">Descripción del Perfil Profesional *:</label>
+                            <textarea
+                                id="descripcion"
+                                rows="3"
+                                placeholder="Indica tu especialidad, experiencia y enfoque de atención..."
+                                value={perfil.descripcion_perfil}
+                                onChange={(e) => setPerfil({ ...perfil, descripcion_perfil: e.target.value })}
                                 disabled={!editando}
                                 className={!editando ? 'input-bloqueado' : ''}
-                                placeholder="Indica tu especialidad, experiencia y enfoque de atención..."
-                                required 
+                                required
                             />
                         </div>
 
                         {editando && (
-                            <div className="form-acciones">
-                                <button type="submit" className="btn-guardar">💾 Guardar Cambios</button>
+                            <div className="perfil-acciones-guardar">
+                                <button type="submit" className="btn-guardar-perfil" disabled={guardando}>
+                                    {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
+                                </button>
                             </div>
                         )}
                     </form>
                 </div>
 
-                {/* TARJETA 2: ZONAS GENERALES DE ATENCIÓN (HU-005) */}
-                <div className="perfil-form-card" style={{ marginTop: '24px' }}>
-                    <h3>Zonas Generales de Atención</h3>
-                    <p className="perfil-subtexto" style={{ marginBottom: '18px' }}>
-                        Informa las ciudades y barrios donde ofreces tus servicios. Esta información es orientativa para tus clientes.
-                    </p>
+                {/* Tarjeta 3: Zonas Generales de Atención */}
+                <div className="perfil-card-bloque">
+                    <div className="zonas-header-box">
+                        <h2 className="zonas-titulo-principal">Zonas Generales de Atención</h2>
+                        <p className="zonas-subtexto">
+                            Informa las ciudades y barrios donde ofreces tus servicios. Esta información es orientativa para tus clientes.
+                        </p>
+                    </div>
 
-                    {/* Formulario para añadir un nuevo barrio */}
-                    <form className="zona-agregar-form" onSubmit={handleAgregarZona}>
-                        <div className="form-fila">
-                            <div className="form-grupo">
-                                <label>Ciudad:</label>
-                                <select value={ciudadSeleccionada} onChange={handleCiudadChange} required>
+                    {/* Sub-caja de Selección para Añadir Barrio */}
+                    <form onSubmit={handleAgregarZona} className="zona-agregar-card">
+                        <div className="zona-inputs-grid">
+                            <div className="zona-input-field">
+                                <label htmlFor="selectCiudad">Ciudad:</label>
+                                <select
+                                    id="selectCiudad"
+                                    value={zonaForm.id_ciudad}
+                                    onChange={handleCiudadZonaChange}
+                                    required
+                                >
                                     <option value="">Selecciona una ciudad</option>
                                     {ciudades.map(c => (
-                                        <option key={c.id_ciudad} value={c.id_ciudad}>{c.nombre}</option>
+                                        <option key={c.id_ciudad} value={c.id_ciudad}>
+                                            {c.nombre}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div className="form-grupo">
-                                <label>Barrio / Sector:</label>
-                                <select 
-                                    value={barrioSeleccionado} 
-                                    onChange={(e) => setBarrioSeleccionado(e.target.value)} 
-                                    disabled={!ciudadSeleccionada}
+                            <div className="zona-input-field">
+                                <label htmlFor="selectBarrio">Barrio / Sector:</label>
+                                <select
+                                    id="selectBarrio"
+                                    value={zonaForm.id_barrio}
+                                    onChange={(e) => setZonaForm({ ...zonaForm, id_barrio: e.target.value })}
+                                    disabled={!zonaForm.id_ciudad}
                                     required
                                 >
                                     <option value="">Selecciona un barrio</option>
                                     {barriosDisponibles.map(b => (
-                                        <option key={b.id_barrio} value={b.id_barrio}>{b.nombre}</option>
+                                        <option key={b.id_barrio} value={b.id_barrio}>
+                                            {b.nombre}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div className="form-grupo btn-zona-col">
-                                <label>&nbsp;</label>
-                                <button type="submit" className="btn-agregar-zona">+ Añadir Barrio</button>
-                            </div>
+                            <button 
+                                type="submit" 
+                                className="btn-anadir-barrio"
+                                disabled={agregandoZona || !zonaForm.id_barrio}
+                            >
+                                {agregandoZona ? '+ Guardando...' : '+ Añadir Barrio'}
+                            </button>
                         </div>
                     </form>
 
-                    {/* Listado agrupado por Ciudad */}
-                    <div className="zonas-lista-agrupada">
+                    {/* Sub-caja con las Zonas Agrupadas Registradas */}
+                    <div className="zonas-registradas-card">
                         {Object.keys(zonasAgrupadasPorCiudad).length === 0 ? (
-                            <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
-                                Aún no has registrado zonas de atención.
-                            </p>
+                            <p className="zonas-vacias-txt">No tienes barrios ni ciudades de cobertura registrados.</p>
                         ) : (
-                            Object.entries(zonasAgrupadasPorCiudad).map(([ciudadNombre, barriosList]) => (
-                                <div key={ciudadNombre} className="ciudad-grupo-box">
-                                    <h4 className="ciudad-grupo-titulo">📍 {ciudadNombre}</h4>
-                                    <div className="barrios-badges-container">
-                                        {barriosList.map(z => (
-                                            <span key={z.id_zona} className="barrio-badge">
-                                                {z.Barrio?.nombre || 'Barrio'}
-                                                <button 
-                                                    type="button" 
-                                                    className="btn-remover-barrio"
+                            Object.entries(zonasAgrupadasPorCiudad).map(([ciudad, zonasDeCiudad]) => (
+                                <div key={ciudad} className="ciudad-grupo-contenedor">
+                                    <h3 className="ciudad-grupo-titulo">
+                                        📍 {ciudad}
+                                    </h3>
+                                    <div className="barrios-chips-wrapper">
+                                        {zonasDeCiudad.map(z => (
+                                            <span key={z.id_zona} className="barrio-chip">
+                                                {z.Barrio?.nombre || z.barrio}
+                                                <button
+                                                    type="button"
+                                                    className="btn-remove-chip"
                                                     onClick={() => handleEliminarZona(z.id_zona)}
-                                                    title="Eliminar barrio"
                                                 >
                                                     ✕
                                                 </button>

@@ -1,111 +1,137 @@
+/* Contenedor que ocupa toda la pantalla y centra la tarjeta */
 .login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
+/* Tarjeta blanca */
 .login-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 40px;
-  width: 100%;
-  max-width: 380px;
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 36px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
 }
 
-.login-card h1 {
-  font-size: 22px;
-  font-weight: 600;
-  margin: 0 0 24px;
+/* Título */
+.login-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 24px 0;
+    text-align: left;
+}
+
+/* Formulario */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .login-field {
-  margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .login-field label {
-  display: block;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin-bottom: 6px;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 400;
 }
 
 .login-field input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: var(--color-text);
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #111827;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
 }
 
 .login-field input:focus {
-  outline: none;
-  border-color: var(--color-black);
+    border-color: #111827;
 }
 
+/* Botón Ingresar */
 .login-button {
-  width: 100%;
-  padding: 12px;
-  background-color: var(--color-black);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 8px;
+    width: 100%;
+    background-color: #111827;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.2s ease;
 }
 
-.login-button:hover {
-  opacity: 0.9;
+.login-button:hover:not(:disabled) {
+    background-color: #1f2937;
 }
 
-.login-error {
-  color: #D14343;
-  font-size: 13px;
-  margin: -8px 0 16px;
+.login-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
-.login-success {
-  color: #1A7A4C;
-  font-size: 14px;
-  line-height: 150%;
-}
-
+/* Enlaces inferiores */
 .login-links {
-  text-align: center;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin-top: 16px;
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
 }
 
-.login-links a {
-  color: var(--color-black);
-  font-weight: 600;
-  text-decoration: none;
+.login-link {
+    color: #111827;
+    text-decoration: none;
+    font-weight: 500;
 }
 
-.login-links a:hover {
-  text-decoration: underline;
+.login-link:hover {
+    text-decoration: underline;
 }
 
-login-field input,
-.login-field textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: var(--color-text);
+.login-register-text {
+    margin: 0;
+    color: #6b7280;
 }
 
-.login-field input:focus,
-.login-field textarea:focus {
-  outline: none;
-  border-color: var(--color-black);
+.login-register-link {
+    color: #111827;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.login-register-link:hover {
+    text-decoration: underline;
+}
+
+/* Mensaje de error */
+.login-error-msg {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    text-align: center;
 }

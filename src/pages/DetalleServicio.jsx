@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import servicios from '../data/servicios';
 import './DetalleServicio.css';
 
 function DetalleServicio() {
