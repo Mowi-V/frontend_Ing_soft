@@ -1,96 +1,87 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import './Login.css'; // Reutilizando los estilos de tu login
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { authService } from '../services/auth.service';
+import './RestablecerPassword.css';
 
-function RestablecerPassword() {
-  const [nuevaContrasena, setNuevaContrasena] = useState('');
-  const [confirmarContrasena, setConfirmarContrasena] = useState('');
-  const [error, setError] = useState(null);
-  
-  const navigate = useNavigate();
-  // Este hook nos permite leer los parámetros de la URL (ej. ?token=abcd...)
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+export default function RestablecerPassword() {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const token = searchParams.get('token') || '';
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
+    const [nuevaContrasena, setNuevaContrasena] = useState('');
+    const [confirmar, setConfirmar] = useState('');
+    const [cargando, setCargando] = useState(false);
+    const [mensaje, setMensaje] = useState(null);
+    const [error, setError] = useState(null);
 
-    // 1. Validaciones locales
-    if (!token) {
-      setError('Enlace inválido o incompleto. Faltan credenciales.');
-      return;
-    }
-    if (nuevaContrasena !== confirmarContrasena) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
-    if (nuevaContrasena.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    try {
-      // 2. Petición POST a tu API REST
-      const respuesta = await fetch('/api/recuperacion/restablecer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          token: token, 
-          nueva_contrasena: nuevaContrasena 
-        })
-      });
+        if (!token) {
+            setError('El enlace de recuperación es inválido o no contiene un token.');
+            return;
+        }
 
-      const data = await respuesta.json();
+        if (nuevaContrasena !== confirmar) {
+            setError('Las contraseñas ingresadas no coinciden.');
+            return;
+        }
 
-      if (respuesta.status === 200) {
-        alert('Contraseña restablecida con éxito. Ya puedes iniciar sesión.');
-        navigate('/login'); // Redirigimos al usuario al login
-      } else {
-        setError(data.msg || 'Error al restablecer la contraseña.');
-      }
-    } catch (error) {
-      console.error("Error de red", error);
-      setError("Error de conexión con el servidor.");
-    }
-  };
+        setCargando(true);
+        setError(null);
 
-  return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1>Restablecer Contraseña</h1>
-        <p>Ingresa tu nueva contraseña a continuación.</p>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="login-field">
-            <label htmlFor="nuevaContrasena">Nueva Contraseña</label>
-            <input
-              id="nuevaContrasena"
-              type="password"
-              value={nuevaContrasena}
-              onChange={(e) => setNuevaContrasena(e.target.value)}
-              required
-            />
-          </div>
+        try {
+            const data = await authService.restablecerPassword(token, nuevaContrasena);
+            setMensaje(data.msg || 'Contraseña actualizada con éxito. Redirigiendo al login...');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2500);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setCargando(false);
+        }
+    };
 
-          <div className="login-field">
-            <label htmlFor="confirmarContrasena">Confirmar Contraseña</label>
-            <input
-              id="confirmarContrasena"
-              type="password"
-              value={confirmarContrasena}
-              onChange={(e) => setConfirmarContrasena(e.target.value)}
-              required
-            />
-          </div>
+    return (
+        <div className="restablecer-container">
+            <form className="restablecer-form" onSubmit={handleSubmit}>
+                <h2>Restablecer Contraseña</h2>
+                <p>Escribe tu nueva clave de acceso.</p>
 
-          {error && <p className="login-error">{error}</p>}
+                {mensaje && <div className="alerta-exito">{mensaje}</div>}
+                {error && <div className="alerta-error">{error}</div>}
 
-          <button type="submit" className="login-button">Guardar Contraseña</button>
-        </form>
-      </div>
-    </div>
-  );
+                <div className="form-group">
+                    <label>Nueva Contraseña</label>
+                    <input 
+                        type="password" 
+                        value={nuevaContrasena}
+                        onChange={(e) => setNuevaContrasena(e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                        required 
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label>Confirmar Nueva Contraseña</label>
+                    <input 
+                        type="password" 
+                        value={confirmar}
+                        onChange={(e) => setConfirmar(e.target.value)}
+                        placeholder="Repite la contraseña"
+                        required 
+                    />
+                </div>
+
+                <button type="submit" disabled={cargando}>
+                    {cargando ? 'Actualizando...' : 'Guardar nueva contraseña'}
+                </button>
+
+                <div className="restablecer-links">
+                    <Link to="/login">← Cancelar y volver al login</Link>
+                </div>
+            </form>
+        </div>
+    );
 }
-
-export default RestablecerPassword;

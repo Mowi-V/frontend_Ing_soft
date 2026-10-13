@@ -99,3 +99,18 @@
     color: #b91c1c;
     border-color: #ef4444;
 }
+.btn-logout-prov {
+    background: none;
+    border: 1px solid #fca5a5;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-logout-prov:hover {
+    background-color: #fee2e2;
+}

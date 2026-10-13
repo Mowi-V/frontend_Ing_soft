@@ -1,75 +1,59 @@
 import { useState } from 'react';
-import { Link , useNavigate} from 'react-router-dom';
-import './Login.css';
+import { Link } from 'react-router-dom';
+import { authService } from '../services/auth.service';
+import './RecuperarPassword.css';
 
-function RecuperarPassword() {
-  const navigate = useNavigate();
-  const [correo, setCorreo] = useState('');
-  const [enviado, setEnviado] = useState(false);
-  const [error, setError] = useState(null);
-  
-  const enviarRecuperacion = async (e) => {
-    e.preventDefault();
-    setError(null);
+export default function RecuperarPassword() {
+    const [correo, setCorreo] = useState('');
+    const [cargando, setCargando] = useState(false);
+    const [mensaje, setMensaje] = useState(null);
+    const [error, setError] = useState(null);
 
-    try {
-            const respuesta = await fetch('/api/recuperacion/solicitar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ correo_electronico: correo})
-            });
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setCargando(true);
+        setError(null);
+        setMensaje(null);
 
-            const data = await respuesta.json(); 
-
-            if (respuesta.status === 200) {
-              alert(data.msg); 
-              navigate("/login");
-
-            } else {
-                setError(data.msg);
-            }
-        } catch (error) {
-            console.error("Error de red", error);
-            setError("Error de conexión con el servidor.");
+        try {
+            const data = await authService.solicitarRecuperacion(correo);
+            // El backend siempre responde mensaje neutro para no revelar cuentas
+            setMensaje(data.msg || 'Si el correo está registrado, recibirás un enlace de recuperación.');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setCargando(false);
         }
-  }
+    };
 
-  return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1>Recuperar contraseña</h1>
+    return (
+        <div className="recuperar-container">
+            <form className="recuperar-form" onSubmit={handleSubmit}>
+                <h2>Recuperar Contraseña</h2>
+                <p>Ingresa tu correo registrado para recibir un enlace temporal.</p>
 
-        {enviado ? (
-          <>
-            <p className="login-success">
-              Si el correo existe en nuestro sistema, te enviamos instrucciones para restablecer tu contraseña.
-            </p>
-            <p className="login-links">
-              <Link to="/login">Volver a iniciar sesión</Link>
-            </p>
-          </>
-        ) : (
-          <>
-            <form onSubmit={enviarRecuperacion}>
-              <div className="login-field">
-                <label htmlFor="correo">Correo</label>
-                <input
-                  id="correo"
-                  type="email"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                />
-              </div>
-              <button type="submit" className="login-button">Enviar instrucciones</button>
+                {mensaje && <div className="alerta-exito">{mensaje}</div>}
+                {error && <div className="alerta-error">{error}</div>}
+
+                <div className="form-group">
+                    <label>Correo Electrónico</label>
+                    <input 
+                        type="email" 
+                        value={correo}
+                        onChange={(e) => setCorreo(e.target.value)}
+                        placeholder="tu_correo@ejemplo.com"
+                        required 
+                    />
+                </div>
+
+                <button type="submit" disabled={cargando}>
+                    {cargando ? 'Enviando...' : 'Enviar enlace'}
+                </button>
+
+                <div className="recuperar-links">
+                    <Link to="/login">← Volver al inicio de sesión</Link>
+                </div>
             </form>
-            <p className="login-links">
-              <Link to="/login">Volver a iniciar sesión</Link>
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+    );
 }
-
-export default RecuperarPassword;

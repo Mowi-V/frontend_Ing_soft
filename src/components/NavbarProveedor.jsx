@@ -1,23 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../services/auth.service';
 import './NavbarProveedor.css';
 
 export default function NavbarProveedor() {
-    const [nombre, setNombre] = useState('Proveedor');
     const navigate = useNavigate();
+    const [nombre, setNombre] = useState('Proveedor');
 
     useEffect(() => {
-        const nombreGuardado = localStorage.getItem('usuario_nombre');
-        if (nombreGuardado) setNombre(nombreGuardado);
+        const u = authService.getUsuario();
+        if (u && u.nombre) setNombre(u.nombre);
     }, []);
 
-    const handleCerrarSesion = () => {
-        // Eliminar credenciales del navegador (HU-002)
-        localStorage.removeItem('x-token');
-        localStorage.removeItem('usuario_nombre');
-        localStorage.removeItem('usuario_rol');
-
-        // Redirección interna de React Router
+    const handleLogout = () => {
+        authService.logout();
         navigate('/login');
     };
 
@@ -30,21 +26,26 @@ export default function NavbarProveedor() {
                 </Link>
             </div>
 
+            <div className="prov-search-container">
+                <span className="prov-search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    placeholder="Buscar servicios o solicitudes..." 
+                    className="prov-search-input"
+                />
+            </div>
+
             <nav className="prov-nav-items">
-                <Link to="/solicitudes-proveedor" className="prov-nav-link">
-                    Panel Proveedor ({nombre})
+                <Link to="/dashboard-proveedor" className="prov-nav-link">
+                    Mis Servicios ({nombre})
                 </Link>
                 
                 <Link to="/perfil-proveedor" className="prov-user-link">
                     <span className="prov-avatar"></span>
-                    <span>Mi cuenta</span>
+                    <span>Mi Cuenta</span>
                 </Link>
 
-                <button 
-                    type="button" 
-                    className="btn-logout-nav" 
-                    onClick={handleCerrarSesion}
-                >
+                <button type="button" className="btn-logout-prov" onClick={handleLogout}>
                     Cerrar Sesión
                 </button>
             </nav>
