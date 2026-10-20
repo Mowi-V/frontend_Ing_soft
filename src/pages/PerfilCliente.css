@@ -12,7 +12,6 @@
     padding: 0 20px;
 }
 
-/* Tarjeta 1: Cabecera con Avatar */
 .perfil-header-card {
     display: flex;
     align-items: center;
@@ -53,7 +52,6 @@
     color: #6b7280;
 }
 
-/* Tarjeta 2: Formulario */
 .perfil-form-card {
     background-color: #ffffff;
     border: 1px solid #e5e7eb;
@@ -62,7 +60,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-/* Barra superior de la tarjeta */
 .perfil-top-actions {
     display: flex;
     justify-content: space-between;
@@ -123,7 +120,6 @@
     background-color: #f9fafb;
 }
 
-/* Formulario */
 .perfil-form {
     display: flex;
     flex-direction: column;
@@ -177,7 +173,6 @@
     resize: vertical;
 }
 
-/* Apariencia de campos bloqueados (solo lectura) */
 .input-bloqueado {
     background-color: #f9fafb !important;
     color: #4b5563 !important;
@@ -185,7 +180,6 @@
     cursor: not-allowed;
 }
 
-/* Botón guardar cambios */
 .perfil-acciones-guardar {
     display: flex;
     justify-content: flex-end;
@@ -213,7 +207,6 @@
     cursor: not-allowed;
 }
 
-/* Alertas */
 .perfil-alerta-exito {
     background-color: #d1fae5;
     color: #065f46;

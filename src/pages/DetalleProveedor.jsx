@@ -50,7 +50,7 @@ export default function DetalleProveedor() {
 
     // Agrupación de zonas por ciudad para presentación clara
     const zonasAgrupadas = proveedor?.zonas?.reduce((acc, z) => {
-        const c = z.ciudad || 'Ciudad';
+        const c = z.Comuna?.nombre || z.comuna || 'Cali';
         if (!acc[c]) acc[c] = [];
         acc[c].push(z.barrio);
         return acc;

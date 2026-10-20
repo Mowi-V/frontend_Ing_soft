@@ -12,7 +12,7 @@ export default function PerfilProveedor() {
     const [error, setError] = useState(null);
     const [mensaje, setMensaje] = useState(null);
 
-    const [ciudades, setCiudades] = useState([]);
+    const [comunas, setComunas] = useState([]);
     const [barriosDisponibles, setBarriosDisponibles] = useState([]);
 
     const [perfil, setPerfil] = useState({
@@ -24,7 +24,7 @@ export default function PerfilProveedor() {
     });
 
     const [zonaForm, setZonaForm] = useState({
-        id_ciudad: '',
+        id_comuna: '',
         id_barrio: ''
     });
 
@@ -35,12 +35,9 @@ export default function PerfilProveedor() {
                 ubicacionesService.obtenerUbicaciones()
             ]);
 
-            setCiudades(dataUbicaciones || []);
+            setComunas(dataUbicaciones || []);
 
-            
             const p = dataPerfil?.perfil || dataPerfil?.proveedor || dataPerfil || {};
-
-            
             const zonasRecibidas = p.zonas || p.zonas_atencion || p.ZonaAtencions || [];
 
             setPerfil({
@@ -62,11 +59,11 @@ export default function PerfilProveedor() {
         cargarDatos();
     }, []);
 
-    const handleCiudadZonaChange = (e) => {
-        const idCiudad = e.target.value;
-        setZonaForm({ id_ciudad: idCiudad, id_barrio: '' });
-        const c = ciudades.find(ciu => String(ciu.id_ciudad) === String(idCiudad));
-        setBarriosDisponibles(c ? c.Barrios || [] : []);
+    const handleComunaZonaChange = (e) => {
+        const idComuna = e.target.value;
+        setZonaForm({ id_comuna: idComuna, id_barrio: '' });
+        const com = comunas.find(c => String(c.id_comuna) === String(idComuna));
+        setBarriosDisponibles(com ? com.Barrios || [] : []);
     };
 
     const handleGuardarPerfil = async (e) => {
@@ -81,6 +78,7 @@ export default function PerfilProveedor() {
                 apellido: perfil.apellido,
                 descripcion_perfil: perfil.descripcion_perfil
             });
+            localStorage.setItem('usuario_nombre', perfil.nombre);
             setMensaje('Perfil profesional actualizado correctamente.');
             setEditando(false);
         } catch (err) {
@@ -92,16 +90,18 @@ export default function PerfilProveedor() {
 
     const handleAgregarZona = async (e) => {
         e.preventDefault();
-        if (!zonaForm.id_ciudad || !zonaForm.id_barrio) return;
+        if (!zonaForm.id_comuna || !zonaForm.id_barrio) return;
 
         setAgregandoZona(true);
         setError(null);
+        setMensaje(null);
         try {
             await proveedoresService.agregarZona(
-                parseInt(zonaForm.id_ciudad, 10),
+                parseInt(zonaForm.id_comuna, 10),
                 parseInt(zonaForm.id_barrio, 10)
             );
-            setZonaForm({ id_ciudad: '', id_barrio: '' });
+            setZonaForm({ ...zonaForm, id_barrio: '' });
+            setMensaje('Barrio añadido a tus zonas de atención.');
             await cargarDatos();
         } catch (err) {
             setError(err.message || 'Error al registrar la zona de atención.');
@@ -111,6 +111,7 @@ export default function PerfilProveedor() {
     };
 
     const handleEliminarZona = async (idZona) => {
+        setError(null);
         try {
             await proveedoresService.eliminarZona(idZona);
             await cargarDatos();
@@ -119,11 +120,11 @@ export default function PerfilProveedor() {
         }
     };
 
-    // Agrupar zonas por el nombre de la ciudad
-    const zonasAgrupadasPorCiudad = perfil.zonas.reduce((acc, z) => {
-        const nombreCiudad = z.Ciudad?.nombre || z.ciudad || 'Ciudad no especificada';
-        if (!acc[nombreCiudad]) acc[nombreCiudad] = [];
-        acc[nombreCiudad].push(z);
+    // Agrupar zonas por el nombre de la Comuna
+    const zonasAgrupadasPorComuna = perfil.zonas.reduce((acc, z) => {
+        const nombreComuna = z.Comuna?.nombre || z.comuna || 'Comuna en Cali';
+        if (!acc[nombreComuna]) acc[nombreComuna] = [];
+        acc[nombreComuna].push(z);
         return acc;
     }, {});
 
@@ -147,7 +148,7 @@ export default function PerfilProveedor() {
                     <div className="perfil-header-text">
                         <h1 className="perfil-header-title">Mi Cuenta (Proveedor)</h1>
                         <p className="perfil-header-subtitle">
-                            Consulta y administra tus credenciales profesionales y zonas de cobertura
+                            Consulta y administra tus credenciales profesionales y comunas/barrios de cobertura en Cali
                         </p>
                     </div>
                 </div>
@@ -244,12 +245,12 @@ export default function PerfilProveedor() {
                     </form>
                 </div>
 
-                {/* Tarjeta 3: Zonas Generales de Atención */}
+                {/* Tarjeta 3: Zonas Generales de Atención en Cali */}
                 <div className="perfil-card-bloque">
                     <div className="zonas-header-box">
-                        <h2 className="zonas-titulo-principal">Zonas Generales de Atención</h2>
+                        <h2 className="zonas-titulo-principal">Zonas Generales de Atención (Santiago de Cali)</h2>
                         <p className="zonas-subtexto">
-                            Informa las ciudades y barrios donde ofreces tus servicios. Esta información es orientativa para tus clientes.
+                            Informa las comunas y barrios donde ofreces tus servicios. Esta información es orientativa para tus clientes.
                         </p>
                     </div>
 
@@ -257,16 +258,16 @@ export default function PerfilProveedor() {
                     <form onSubmit={handleAgregarZona} className="zona-agregar-card">
                         <div className="zona-inputs-grid">
                             <div className="zona-input-field">
-                                <label htmlFor="selectCiudad">Ciudad:</label>
+                                <label htmlFor="selectComuna">Comuna:</label>
                                 <select
-                                    id="selectCiudad"
-                                    value={zonaForm.id_ciudad}
-                                    onChange={handleCiudadZonaChange}
+                                    id="selectComuna"
+                                    value={zonaForm.id_comuna}
+                                    onChange={handleComunaZonaChange}
                                     required
                                 >
-                                    <option value="">Selecciona una ciudad</option>
-                                    {ciudades.map(c => (
-                                        <option key={c.id_ciudad} value={c.id_ciudad}>
+                                    <option value="">Selecciona una comuna</option>
+                                    {comunas.map(c => (
+                                        <option key={c.id_comuna} value={c.id_comuna}>
                                             {c.nombre}
                                         </option>
                                     ))}
@@ -279,7 +280,7 @@ export default function PerfilProveedor() {
                                     id="selectBarrio"
                                     value={zonaForm.id_barrio}
                                     onChange={(e) => setZonaForm({ ...zonaForm, id_barrio: e.target.value })}
-                                    disabled={!zonaForm.id_ciudad}
+                                    disabled={!zonaForm.id_comuna}
                                     required
                                 >
                                     <option value="">Selecciona un barrio</option>
@@ -291,8 +292,8 @@ export default function PerfilProveedor() {
                                 </select>
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="btn-anadir-barrio"
                                 disabled={agregandoZona || !zonaForm.id_barrio}
                             >
@@ -301,18 +302,18 @@ export default function PerfilProveedor() {
                         </div>
                     </form>
 
-                    {/* Sub-caja con las Zonas Agrupadas Registradas */}
+                    {/* Sub-caja con las Zonas Agrupadas por Comuna */}
                     <div className="zonas-registradas-card">
-                        {Object.keys(zonasAgrupadasPorCiudad).length === 0 ? (
-                            <p className="zonas-vacias-txt">No tienes barrios ni ciudades de cobertura registrados.</p>
+                        {Object.keys(zonasAgrupadasPorComuna).length === 0 ? (
+                            <p className="zonas-vacias-txt">No tienes comunas ni barrios de cobertura registrados aún.</p>
                         ) : (
-                            Object.entries(zonasAgrupadasPorCiudad).map(([ciudad, zonasDeCiudad]) => (
-                                <div key={ciudad} className="ciudad-grupo-contenedor">
+                            Object.entries(zonasAgrupadasPorComuna).map(([comuna, zonasDeComuna]) => (
+                                <div key={comuna} className="ciudad-grupo-contenedor">
                                     <h3 className="ciudad-grupo-titulo">
-                                        📍 {ciudad}
+                                        📍 {comuna}
                                     </h3>
                                     <div className="barrios-chips-wrapper">
-                                        {zonasDeCiudad.map(z => (
+                                        {zonasDeComuna.map(z => (
                                             <span key={z.id_zona} className="barrio-chip">
                                                 {z.Barrio?.nombre || z.barrio}
                                                 <button

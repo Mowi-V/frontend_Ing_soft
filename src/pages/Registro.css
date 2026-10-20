@@ -1,20 +1,18 @@
-/* Contenedor de pantalla completa idéntico al login */
-.register-page {
+.registro-page {
     min-height: 100vh;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: #f3f4f6;
-    padding: 40px 20px;
+    padding: 32px 20px;
     box-sizing: border-box;
 }
 
-/* Tarjeta centrada con dimensiones proporcionadas para el registro */
-.register-card {
+.registro-card {
     background-color: #ffffff;
     width: 100%;
-    max-width: 480px;
+    max-width: 520px;
     padding: 40px 36px;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
@@ -22,8 +20,7 @@
     box-sizing: border-box;
 }
 
-/* Título */
-.register-title {
+.registro-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: #111827;
@@ -31,40 +28,42 @@
     text-align: left;
 }
 
-/* Formulario */
-.register-form {
+.registro-form {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* Fila para agrupar 2 inputs */
-.register-row {
+.registro-row {
     display: flex;
-    gap: 12px;
+    gap: 14px;
 }
 
-.register-row .register-field {
+.registro-row .registro-field {
     flex: 1;
 }
 
-/* Bloques de campo individual */
-.register-field {
+@media (max-width: 540px) {
+    .registro-row {
+        flex-direction: column;
+    }
+}
+
+.registro-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.register-field label {
+.registro-field label {
     font-size: 0.875rem;
     color: #6b7280;
     font-weight: 400;
 }
 
-/* Entradas de formulario normalizadas */
-.register-field input,
-.register-field select,
-.register-field textarea {
+.registro-field input,
+.registro-field select,
+.registro-field textarea {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #e5e7eb;
@@ -74,36 +73,27 @@
     background-color: #ffffff;
     outline: none;
     box-sizing: border-box;
-    transition: border-color 0.2s ease;
     font-family: inherit;
+    transition: border-color 0.2s ease;
 }
 
-.register-field textarea {
-    resize: vertical;
-}
-
-.register-field input:focus,
-.register-field select:focus,
-.register-field textarea:focus {
+.registro-field input:focus,
+.registro-field select:focus,
+.registro-field textarea:focus {
     border-color: #111827;
 }
 
-.register-field select:disabled {
+.registro-field select:disabled {
     background-color: #f9fafb;
     color: #9ca3af;
     cursor: not-allowed;
 }
 
-/* Sub-contenedor para los campos condicionales de Cliente/Proveedor */
-.register-extra-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding-top: 4px;
+.registro-field textarea {
+    resize: vertical;
 }
 
-/* Botón principal */
-.register-button {
+.registro-button {
     width: 100%;
     background-color: #111827;
     color: #ffffff;
@@ -117,41 +107,40 @@
     transition: background-color 0.2s ease;
 }
 
-.register-button:hover:not(:disabled) {
+.registro-button:hover:not(:disabled) {
     background-color: #1f2937;
 }
 
-.register-button:disabled {
+.registro-button:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
-/* Pie de página con enlace hacia login */
-.register-links {
+.registro-links {
     margin-top: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 12px;
     font-size: 0.875rem;
 }
 
-.register-login-text {
+.registro-login-text {
     margin: 0;
     color: #6b7280;
 }
 
-.register-login-link {
+.registro-login-link {
     color: #111827;
     text-decoration: none;
     font-weight: 700;
 }
 
-.register-login-link:hover {
+.registro-login-link:hover {
     text-decoration: underline;
 }
 
-/* Mensaje de error */
-.register-error-msg {
+.registro-error-msg {
     background-color: #fee2e2;
     color: #b91c1c;
     padding: 10px;

@@ -5,6 +5,6 @@ export const ubicacionesService = {
         const data = await apiClient('/ubicaciones', {
             method: 'GET'
         });
-        return data.ciudades || [];
+        return data.comunas || data.ciudades || [];
     }
 };

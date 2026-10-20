@@ -11,13 +11,13 @@ export default function PerfilCliente() {
     const [mensaje, setMensaje] = useState(null);
     const [error, setError] = useState(null);
 
-    const [ciudades, setCiudades] = useState([]);
+    const [comunas, setComunas] = useState([]);
     const [barriosDisponibles, setBarriosDisponibles] = useState([]);
 
     const [correo, setCorreo] = useState('');
     const [nombre, setNombre] = useState('');
     const [apellido, setApellido] = useState('');
-    const [idCiudad, setIdCiudad] = useState('');
+    const [idComuna, setIdComuna] = useState('');
     const [idBarrio, setIdBarrio] = useState('');
     const [direccion, setDireccion] = useState('');
     const [infoComplementaria, setInfoComplementaria] = useState('');
@@ -32,23 +32,23 @@ export default function PerfilCliente() {
                     ubicacionesService.obtenerUbicaciones()
                 ]);
 
-                setCiudades(dataUbicaciones || []);
+                setComunas(dataUbicaciones || []);
 
-                const p = dataPerfil.perfil || dataPerfil;
+                const p = dataPerfil?.perfil || dataPerfil || {};
                 setCorreo(p.correo_electronico || '');
                 setNombre(p.nombre || '');
                 setApellido(p.apellido || '');
-                setIdCiudad(p.id_ciudad ? String(p.id_ciudad) : '');
+                setIdComuna(p.id_comuna ? String(p.id_comuna) : '');
                 setIdBarrio(p.id_barrio ? String(p.id_barrio) : '');
                 setDireccion(p.direccion || '');
                 setInfoComplementaria(p.informacion_complementaria || '');
 
-                if (p.id_ciudad && dataUbicaciones) {
-                    const ciudadEncontrada = dataUbicaciones.find(
-                        c => String(c.id_ciudad) === String(p.id_ciudad)
+                if (p.id_comuna && dataUbicaciones) {
+                    const comunaEncontrada = dataUbicaciones.find(
+                        c => String(c.id_comuna) === String(p.id_comuna)
                     );
-                    if (ciudadEncontrada) {
-                        setBarriosDisponibles(ciudadEncontrada.Barrios || []);
+                    if (comunaEncontrada) {
+                        setBarriosDisponibles(comunaEncontrada.Barrios || []);
                     }
                 }
             } catch (err) {
@@ -61,13 +61,13 @@ export default function PerfilCliente() {
         cargarDatos();
     }, []);
 
-    const handleCiudadChange = (e) => {
-        const nuevaCiudadId = e.target.value;
-        setIdCiudad(nuevaCiudadId);
+    const handleComunaChange = (e) => {
+        const nuevaComunaId = e.target.value;
+        setIdComuna(nuevaComunaId);
         setIdBarrio('');
 
-        const ciudadEncontrada = ciudades.find(c => String(c.id_ciudad) === String(nuevaCiudadId));
-        setBarriosDisponibles(ciudadEncontrada ? ciudadEncontrada.Barrios || [] : []);
+        const comunaEncontrada = comunas.find(c => String(c.id_comuna) === String(nuevaComunaId));
+        setBarriosDisponibles(comunaEncontrada ? comunaEncontrada.Barrios || [] : []);
     };
 
     const handleGuardar = async (e) => {
@@ -80,12 +80,13 @@ export default function PerfilCliente() {
             await clientesService.actualizarPerfil({
                 nombre,
                 apellido,
-                id_ciudad: parseInt(idCiudad, 10),
+                id_comuna: parseInt(idComuna, 10),
                 id_barrio: parseInt(idBarrio, 10),
                 direccion,
                 informacion_complementaria: infoComplementaria
             });
 
+            localStorage.setItem('usuario_nombre', nombre);
             setMensaje('Perfil actualizado correctamente.');
             setEditando(false);
         } catch (err) {
@@ -115,7 +116,7 @@ export default function PerfilCliente() {
                     <div className="perfil-header-text">
                         <h1 className="perfil-header-title">Mi Cuenta</h1>
                         <p className="perfil-header-subtitle">
-                            Consulta y administra tus datos personales y dirección de atención
+                            Consulta y administra tus datos personales y dirección de atención en Cali
                         </p>
                     </div>
                 </div>
@@ -190,18 +191,18 @@ export default function PerfilCliente() {
 
                         <div className="perfil-form-row">
                             <div className="perfil-form-group">
-                                <label htmlFor="ciudad">Ciudad *:</label>
+                                <label htmlFor="comuna">Comuna (Cali) *:</label>
                                 <select
-                                    id="ciudad"
-                                    value={idCiudad}
-                                    onChange={handleCiudadChange}
+                                    id="comuna"
+                                    value={idComuna}
+                                    onChange={handleComunaChange}
                                     disabled={!editando}
                                     className={!editando ? 'input-bloqueado' : ''}
                                     required
                                 >
-                                    <option value="">Seleccione una ciudad</option>
-                                    {ciudades.map(c => (
-                                        <option key={c.id_ciudad} value={c.id_ciudad}>
+                                    <option value="">Seleccione una comuna</option>
+                                    {comunas.map(c => (
+                                        <option key={c.id_comuna} value={c.id_comuna}>
                                             {c.nombre}
                                         </option>
                                     ))}
@@ -213,7 +214,7 @@ export default function PerfilCliente() {
                                     id="barrio"
                                     value={idBarrio}
                                     onChange={(e) => setIdBarrio(e.target.value)}
-                                    disabled={!editando || !idCiudad}
+                                    disabled={!editando || !idComuna}
                                     className={!editando ? 'input-bloqueado' : ''}
                                     required
                                 >
