@@ -75,5 +75,11 @@ export const authService = {
     getUsuario: () => {
         const raw = localStorage.getItem(STORAGE_KEYS.USUARIO);
         return raw ? JSON.parse(raw) : null;
-    }
+    },
+    
+    verificarTokenRecuperacion: async (token) => {
+    return await apiClient(`/recuperacion/verificar/${encodeURIComponent(token)}`, {
+        method: 'GET'
+    });
+},
 };

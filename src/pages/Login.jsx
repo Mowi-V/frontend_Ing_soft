@@ -14,13 +14,13 @@ export default function Login() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const comprobarSesion = async () => {
+        const validarSesionPrevia = async () => {
             const usuario = await authService.verificarSesionServidor();
             if (usuario) {
                 navigate(usuario.rol === ROLES.PROVEEDOR ? '/dashboard-proveedor' : '/dashboard-cliente', { replace: true });
             }
         };
-        comprobarSesion();
+        validarSesionPrevia();
     }, [navigate]);
 
     const handleChange = (e) => {

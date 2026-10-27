@@ -17,43 +17,49 @@ export default function RecuperarPassword() {
 
         try {
             const data = await authService.solicitarRecuperacion(correo);
-            // El backend siempre responde mensaje neutro para no revelar cuentas
-            setMensaje(data.msg || 'Si el correo está registrado, recibirás un enlace de recuperación.');
+            setMensaje(data.msg || 'Se ha enviado un enlace de recuperación a tu correo electrónico.');
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Error al solicitar la recuperación');
         } finally {
             setCargando(false);
         }
     };
 
     return (
-        <div className="recuperar-container">
-            <form className="recuperar-form" onSubmit={handleSubmit}>
-                <h2>Recuperar Contraseña</h2>
-                <p>Ingresa tu correo registrado para recibir un enlace temporal.</p>
+        <div className="recuperar-page">
+            <div className="recuperar-card">
+                <h1 className="recuperar-title">Recuperar contraseña</h1>
+                <p className="recuperar-subtexto">
+                    Ingresa tu correo y te enviaremos las instrucciones para restablecer tu cuenta.
+                </p>
 
-                {mensaje && <div className="alerta-exito">{mensaje}</div>}
-                {error && <div className="alerta-error">{error}</div>}
+                {mensaje && <div className="recuperar-exito-msg">{mensaje}</div>}
+                {error && <div className="recuperar-error-msg">{error}</div>}
 
-                <div className="form-group">
-                    <label>Correo Electrónico</label>
-                    <input 
-                        type="email" 
-                        value={correo}
-                        onChange={(e) => setCorreo(e.target.value)}
-                        placeholder="tu_correo@ejemplo.com"
-                        required 
-                    />
-                </div>
+                <form onSubmit={handleSubmit} className="recuperar-form">
+                    <div className="recuperar-field">
+                        <label htmlFor="correo">Correo registrado</label>
+                        <input
+                            id="correo"
+                            type="email"
+                            value={correo}
+                            onChange={(e) => setCorreo(e.target.value)}
+                            required
+                            placeholder="ejemplo@correo.com"
+                        />
+                    </div>
 
-                <button type="submit" disabled={cargando}>
-                    {cargando ? 'Enviando...' : 'Enviar enlace'}
-                </button>
+                    <button type="submit" className="recuperar-button" disabled={cargando}>
+                        {cargando ? 'Enviando...' : 'Enviar enlace'}
+                    </button>
+                </form>
 
                 <div className="recuperar-links">
-                    <Link to="/login">← Volver al inicio de sesión</Link>
+                    <Link to="/login" className="recuperar-link">
+                        Volver al inicio de sesión
+                    </Link>
                 </div>
-            </form>
+            </div>
         </div>
     );
 }
