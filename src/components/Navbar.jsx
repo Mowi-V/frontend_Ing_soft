@@ -5,15 +5,15 @@ import './Navbar.css';
 export default function Navbar() {
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        authService.logout();
+    const handleLogout = async () => {
+        await authService.logout();
         navigate('/login');
     };
 
     return (
         <header className="client-navbar">
             <div className="client-brand">
-                <span className="client-brand-box">▢</span>
+                <span className="client-brand-icon">▢</span>
                 <Link to="/dashboard-cliente" className="client-brand-title">
                     Bienestar en Casa
                 </Link>
@@ -21,16 +21,16 @@ export default function Navbar() {
 
             <nav className="client-nav-items">
                 <Link to="/dashboard-cliente" className="client-nav-link">
-                    Explorar
+                    Explorar Servicios
                 </Link>
                 <Link to="/mis-solicitudes" className="client-nav-link">
-                    Mis Solicitudes
+                    Mis Citas
                 </Link>
                 <Link to="/perfil-cliente" className="client-user-link">
                     <span className="client-avatar"></span>
-                    <span>Mi Cuenta</span>
+                    <span>Mi Perfil</span>
                 </Link>
-                <button type="button" className="btn-logout-client" onClick={handleLogout}>
+                <button type="button" onClick={handleLogout} className="btn-logout-client">
                     Cerrar Sesión
                 </button>
             </nav>

@@ -1,7 +1,7 @@
 import { apiClient } from './api.client';
 
 export const solicitudesService = {
-    // HU-012: Crear solicitud de servicio
+
     crearSolicitud: async (datos) => {
         return await apiClient('/solicitudes', {
             method: 'POST',
@@ -9,14 +9,19 @@ export const solicitudesService = {
         });
     },
 
-    // HU-013: Consultar mis solicitudes (Cliente)
-    obtenerMisSolicitudesCliente: async () => {
-        return await apiClient('/solicitudes/mias', {
+    obtenerMisSolicitudesCliente: async (estado = 'TODOS') => {
+        const query = estado && estado !== 'TODOS' ? `?estado=${encodeURIComponent(estado)}` : '';
+        return await apiClient(`/solicitudes/mias${query}`, {
             method: 'GET'
         });
     },
 
-    // HU-014: Consultar solicitudes recibidas (Proveedor)
+    obtenerDetalleSolicitud: async (idSolicitud) => {
+        return await apiClient(`/solicitudes/${idSolicitud}`, {
+            method: 'GET'
+        });
+    },
+
     obtenerSolicitudesProveedor: async () => {
         return await apiClient('/solicitudes/recibidas', {
             method: 'GET'

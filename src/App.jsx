@@ -2,19 +2,19 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './guards/ProtectedRoute';
 import { ROLES } from './utils/constants';
 
-// Vistas Públicas
+
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import RecuperarPassword from './pages/RecuperarPassword';
 import RestablecerPassword from './pages/RestablecerPassword';
 
-// Vistas Protegidas Cliente
 import DashboardCliente from './pages/DashboardCliente';
 import PerfilCliente from './pages/PerfilCliente';
 import DetalleProveedor from './pages/DetalleProveedor';
 import DetalleServicio from './pages/DetalleServicio';
+import MisSolicitudes from './pages/MisSolicitudes';
 
-// Vistas Protegidas Proveedor
+
 import DashboardProveedor from './pages/DashboardProveedor';
 import PerfilProveedor from './pages/PerfilProveedor';
 import CrearServicio from './pages/CrearServicio';
@@ -33,6 +33,7 @@ export default function App() {
                 {/* Rutas Protegidas: Rol Cliente ('C') */}
                 <Route element={<ProtectedRoute rolPermitido={ROLES.CLIENTE} />}>
                     <Route path="/dashboard-cliente" element={<DashboardCliente />} />
+                    <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
                     <Route path="/perfil-cliente" element={<PerfilCliente />} />
                     <Route path="/proveedor/:id" element={<DetalleProveedor />} />
                     <Route path="/servicio/:id" element={<DetalleServicio />} />

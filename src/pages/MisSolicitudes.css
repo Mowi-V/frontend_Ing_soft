@@ -1,0 +1,450 @@
+.mis-solicitudes-wrapper {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #111827;
+}
+
+.mis-solicitudes-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 32px 24px 60px 24px;
+}
+
+.solicitudes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.solicitudes-header h1 {
+    margin: 0 0 4px 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+}
+
+.solicitudes-header p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #6b7280;
+}
+
+.btn-agendar-nuevo {
+    background-color: #111827;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-agendar-nuevo:hover {
+    background-color: #1f2937;
+}
+
+/* Barra de Filtros por Estado */
+.solicitudes-filtros-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+    padding-bottom: 4px;
+}
+
+.filtro-pill {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.filtro-pill:hover {
+    border-color: #9ca3af;
+    color: #111827;
+}
+
+.filtro-pill.activo {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+
+.solicitudes-loading {
+    color: #6b7280;
+    font-size: 0.95rem;
+    text-align: center;
+    padding-top: 40px;
+}
+
+/* Empty State */
+.solicitudes-empty-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.solicitudes-empty-card h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.solicitudes-empty-card p {
+    font-size: 0.88rem;
+    color: #6b7280;
+    margin: 0 0 20px 0;
+    line-height: 1.45;
+}
+
+.btn-explorar-empty {
+    background-color: #111827;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Grilla de Solicitudes */
+.solicitudes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.solicitud-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.solicitud-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+.solicitud-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.solicitud-id {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.solicitud-servicio-nombre {
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.solicitud-prov-nombre {
+    margin: 0 0 14px 0;
+    font-size: 0.86rem;
+    color: #4b5563;
+}
+
+.solicitud-fechas-bloque {
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.fecha-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fecha-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.fecha-valor {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.fecha-sugerida-highlight {
+    border-top: 1px dashed #c7d2fe;
+    padding-top: 6px;
+    margin-top: 4px;
+}
+
+.fecha-sugerida-highlight .fecha-label {
+    color: #3730a3;
+}
+
+.fecha-sugerida-highlight .fecha-valor {
+    color: #3730a3;
+}
+
+.solicitud-lugar-bloque {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.82rem;
+    color: #374151;
+    margin-bottom: 16px;
+}
+
+.lugar-barrio {
+    font-size: 0.76rem;
+    color: #6b7280;
+}
+
+.solicitud-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.solicitud-precio-duracion {
+    display: flex;
+    flex-direction: column;
+}
+
+.solic-precio {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.solic-duracion {
+    font-size: 0.76rem;
+    color: #059669;
+    font-weight: 600;
+}
+
+.btn-ver-detalle-solic {
+    background-color: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-ver-detalle-solic:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* Modal de Detalle de Solicitud */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.modal-solicitud-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-sub-id {
+    font-size: 0.74rem;
+    color: #9ca3af;
+    font-weight: 600;
+    display: block;
+}
+
+.modal-header h3 {
+    margin: 2px 0 0 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.btn-close-modal:hover {
+    color: #111827;
+}
+
+.modal-body-scroll {
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.label-status {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.modal-seccion-datos {
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.modal-seccion-datos h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.modal-seccion-datos p {
+    margin: 0 0 4px 0;
+    font-size: 0.88rem;
+    color: #374151;
+}
+
+.datos-comerciales-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.campo-sub {
+    font-size: 0.74rem;
+    color: #6b7280;
+    display: block;
+}
+
+.campo-val {
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+.txt-sugerida-alerta {
+    color: #3730a3;
+    font-weight: 600;
+}
+
+.txt-meta-fechas {
+    font-size: 0.76rem !important;
+    color: #9ca3af !important;
+    margin-top: 4px !important;
+}
+
+.texto-observacion {
+    font-style: italic;
+    color: #4b5563;
+}
+
+.modal-seccion-alerta-motivo {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.modal-seccion-alerta-motivo h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #991b1b;
+}
+
+.modal-seccion-alerta-motivo p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #7f1d1d;
+}
+
+.modal-footer {
+    padding: 14px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-modal-cerrar {
+    background-color: #111827;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 18px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+}
