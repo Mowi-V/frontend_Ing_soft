@@ -1,31 +1,55 @@
 .detalle-prov-wrapper {
-    background-color: #f6f7f9;
+    background-color: #f8f9fa;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #1a1a1a;
+    color: #111827;
+    box-sizing: border-box;
 }
 
 .detalle-prov-container {
-    max-width: 1100px;
-    margin: 32px auto;
-    padding: 0 24px 60px;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 28px 24px 60px 24px;
 }
 
+.btn-volver-link {
+    display: inline-block;
+    color: #4b5563;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: color 0.15s ease;
+}
+
+.btn-volver-link:hover {
+    color: #111827;
+}
+
+.detalle-prov-loading {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.95rem;
+    padding-top: 60px;
+}
+
+/* Tarjeta Principal del Profesional (Hero) */
 .perfil-card-hero {
-    background: #ffffff;
+    background-color: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 28px;
+    padding: 28px 32px;
     margin-bottom: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .perfil-hero-info {
     display: flex;
-    gap: 20px;
+    gap: 22px;
     align-items: center;
     border-bottom: 1px solid #f3f4f6;
-    padding-bottom: 24px;
-    margin-bottom: 20px;
+    padding-bottom: 22px;
+    margin-bottom: 22px;
 }
 
 .avatar-profesional-box {
@@ -34,64 +58,200 @@
     border-radius: 50%;
     background-color: #e5e7eb;
     border: 1px solid #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #374151;
     flex-shrink: 0;
 }
 
-.perfil-hero-info h2 {
-    margin: 0 0 6px 0;
-    font-size: 1.5rem;
+.perfil-hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.prov-hero-title {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 800;
     color: #111827;
 }
 
 .descripcion-profesional-txt {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     color: #4b5563;
     line-height: 1.45;
 }
 
-.cobertura-seccion-hero h4 {
+/* Grilla de 2 Columnas: Cobertura vs Horarios */
+.prov-info-split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+@media (max-width: 860px) {
+    .prov-info-split-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bloque-header {
+    margin-bottom: 14px;
+}
+
+.bloque-titulo {
     margin: 0 0 4px 0;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: 700;
     color: #111827;
 }
 
-.aviso-orientativo {
-    margin: 0 0 12px 0;
-    font-size: 0.8rem;
+.bloque-aviso {
+    margin: 0;
+    font-size: 0.78rem;
     color: #6b7280;
+    line-height: 1.35;
 }
 
-.grupos-ciudades-wrapper {
+.sin-datos-txt {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Columna Cobertura */
+.comunas-lista-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.comuna-item-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.comuna-nombre-tag {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.barrios-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip-barrio-tag {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 9999px;
+}
+
+/* Columna Horarios */
+.semana-horarios-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.ciudad-chip-box {
+.dia-horario-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    font-size: 0.88rem;
+    justify-content: space-between;
+    padding: 7px 12px;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
 }
 
-.barrios-chips {
+.dia-label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #111827;
+    width: 85px;
+}
+
+.dia-franjas-chips {
     display: flex;
-    gap: 6px;
     flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
 }
 
-.chip-barrio {
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    padding: 2px 8px;
-    border-radius: 9999px;
+.franja-horaria-chip {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #111827;
     font-size: 0.78rem;
-    color: #374151;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
 }
 
-/* Catálogo */
+.descanso-tag {
+    font-size: 0.76rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.periodos-bloqueo-box {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bloqueo-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #991b1b;
+}
+
+.periodos-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.periodo-badge {
+    font-size: 0.75rem;
+    background-color: #ffffff;
+    border: 1px solid #fca5a5;
+    color: #7f1d1d;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Sección Catálogo */
+.catalogo-servicios-seccion {
+    margin-top: 8px;
+}
+
 .catalogo-header {
     display: flex;
     justify-content: space-between;
@@ -99,54 +259,94 @@
     margin-bottom: 20px;
 }
 
-.catalogo-header h3 {
-    margin: 0;
-    font-size: 1.3rem;
+.catalogo-titulo {
+    font-size: 1.35rem;
+    font-weight: 700;
     color: #111827;
+    margin: 0;
 }
 
 .total-servicios-badge {
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 600;
     color: #6b7280;
 }
 
-.servicios-prov-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.servicio-prov-card {
-    background: #ffffff;
+.sin-servicios-txt {
+    color: #6b7280;
+    font-size: 0.92rem;
+    text-align: center;
+    padding: 30px;
+    background-color: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
+}
+
+.servicios-prov-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 24px;
+}
+
+/* Tarjeta individual de servicio */
+.servicio-prov-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.servicio-prov-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
 }
 
 .servicio-card-cover {
-    height: 160px;
+    width: 100%;
+    height: 165px;
     background-color: #f3f4f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.servicio-card-cover img {
+.servicio-img-cover {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
-.cover-empty {
+.cover-empty-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.cover-oval {
+    width: 65%;
+    height: 55%;
+    border: 1px solid #d1d5db;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.cover-txt {
+    font-size: 0.82rem;
     color: #9ca3af;
-    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 1;
 }
 
 .servicio-card-body {
-    padding: 16px;
+    padding: 18px 20px 20px 20px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -158,23 +358,25 @@
     font-weight: 700;
     text-transform: uppercase;
     background-color: #f3f4f6;
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: 4px;
     color: #4b5563;
     margin-bottom: 8px;
+    letter-spacing: 0.02em;
 }
 
-.servicio-card-body h4 {
+.servicio-card-title {
     margin: 0 0 6px 0;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: #111827;
 }
 
 .desc-corta {
-    margin: 0 0 14px 0;
+    margin: 0 0 16px 0;
     font-size: 0.85rem;
     color: #6b7280;
-    line-height: 1.35;
+    line-height: 1.4;
     flex: 1;
 }
 
@@ -182,19 +384,19 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
+    padding-top: 10px;
+    margin-bottom: 14px;
     border-top: 1px solid #f3f4f6;
-    margin-bottom: 12px;
 }
 
 .precio-val {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1.1rem;
     color: #111827;
 }
 
 .duracion-val {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: #6b7280;
 }
 
@@ -205,52 +407,63 @@
 
 .btn-ver-detalle {
     flex: 1;
-    padding: 8px;
-    background: transparent;
+    padding: 8px 10px;
+    background-color: transparent;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     color: #374151;
+    transition: background-color 0.15s ease;
+}
+
+.btn-ver-detalle:hover {
+    background-color: #f3f4f6;
 }
 
 .btn-solicitar-servicio {
-    flex: 1;
-    padding: 8px;
-    background: #18181b;
+    flex: 1.2;
+    padding: 8px 10px;
+    background-color: #111827;
     border: none;
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     color: #ffffff;
+    transition: background-color 0.15s ease;
 }
 
-/* Modal Detalle */
+.btn-solicitar-servicio:hover {
+    background-color: #1f2937;
+}
+
+/* Modal de Vista Rápida */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.55);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .modal-detalle-card {
-    background: #ffffff;
+    background-color: #ffffff;
     border-radius: 12px;
     width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
+    max-width: 580px;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
@@ -263,15 +476,22 @@
 
 .modal-header h3 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
 }
 
 .btn-cerrar-modal {
     background: none;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     cursor: pointer;
     color: #6b7280;
+    padding: 4px;
+}
+
+.btn-cerrar-modal:hover {
+    color: #111827;
 }
 
 .modal-body-scroll {
@@ -282,23 +502,31 @@
 .modal-tags-meta {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.modal-meta-item {
+    font-size: 0.85rem;
+    color: #4b5563;
+    font-weight: 500;
 }
 
 .precio-modal {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1.15rem;
     color: #111827;
 }
 
 .modal-campo-bloque {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .modal-campo-bloque h5 {
     margin: 0 0 6px 0;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
+    font-weight: 700;
     color: #374151;
 }
 
@@ -311,38 +539,72 @@
 
 .modal-galeria-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
 }
 
 .galeria-thumb {
-    height: 100px;
+    height: 85px;
     border-radius: 6px;
     overflow: hidden;
-    background: #000;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
 }
 
-.galeria-thumb img,
-.galeria-thumb video {
+.galeria-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+}
+
+.video-thumb-txt {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #4b5563;
 }
 
 .modal-footer {
-    padding: 16px 24px;
+    padding: 14px 24px;
     border-top: 1px solid #e5e7eb;
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cerrar-outline {
+    background-color: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: #4b5563;
+}
+
+.btn-cerrar-outline:hover {
+    background-color: #f9fafb;
 }
 
 .btn-solicitar-modal {
-    background: #18181b;
+    background-color: #111827;
     color: #ffffff;
     border: none;
-    padding: 10px 24px;
+    padding: 9px 18px;
     border-radius: 6px;
     font-weight: 600;
+    font-size: 0.88rem;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-solicitar-modal:hover {
+    background-color: #1f2937;
 }

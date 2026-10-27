@@ -31,7 +31,6 @@ export default function DashboardCliente() {
         cargarCatalogo();
     }, [categoriaSeleccionada]);
 
-    // Filtro reactivo en tiempo real por nombre, descripción o profesional
     const serviciosFiltrados = servicios.filter(s => {
         const query = busqueda.toLowerCase().trim();
         if (!query) return true;
@@ -74,7 +73,6 @@ export default function DashboardCliente() {
                     </div>
                 </section>
 
-                {/* Cabecera del Listado */}
                 <div className="dash-section-header">
                     <h1 className="dash-section-title">Servicios Disponibles</h1>
                     <p className="dash-section-count">
@@ -84,7 +82,6 @@ export default function DashboardCliente() {
 
                 {error && <div className="dash-alert-error">{error}</div>}
 
-                {/* Grilla de Tarjetas (3 Columnas) */}
                 <section className="dash-cards-grid">
                     {!cargando && serviciosFiltrados.length === 0 && (
                         <p className="dash-empty-message">
@@ -96,20 +93,20 @@ export default function DashboardCliente() {
                         const miniatura = s.recursos?.find(r => r.es_miniatura === 1 && r.tipo === 'F') 
                                        || s.recursos?.find(r => r.tipo === 'F');
 
-                        const idProveedor = s.id_proveedor || s.Proveedor?.id_proveedor;
+                        // Extracción tolerante de la llave foránea
+                        const idProveedor = s.id_proveedor || s.Proveedor?.id_proveedor || s.Proveedor?.Usuario?.id_usuario;
 
                         const nombreProveedor = s.Proveedor?.Usuario 
                             ? `${s.Proveedor.Usuario.nombre} ${s.Proveedor.Usuario.apellido || ''}`.trim()
-                            : (s.Proveedor?.nombre || s.nombre_proveedor || 'Profesional de bienestar');
+                            : (s.Proveedor?.nombre || 'Profesional independiente');
 
-                        const primerBarrio = s.Proveedor?.ZonaAtencions?.[0]?.Barrio?.nombre 
-                                          || s.Proveedor?.ZonaAtencions?.[0]?.Ciudad?.nombre 
-                                          || s.ciudad 
-                                          || 'Santiago de Cali';
+                        const zonaPrincipal = s.Proveedor?.ZonaAtencions?.[0]?.Barrio?.nombre 
+                                           || s.Proveedor?.ZonaAtencions?.[0]?.Ciudad?.nombre 
+                                           || 'Santiago de Cali';
 
                         return (
                             <article key={s.id_servicio} className="dash-card">
-                                {/* Cabecera de la tarjeta: Clic lleva al Detalle del Servicio */}
+                                {/* Clic en Imagen -> Detalle del Servicio */}
                                 <div 
                                     className="dash-card-image-box" 
                                     onClick={() => navigate(`/servicio/${s.id_servicio}`)}
@@ -130,8 +127,8 @@ export default function DashboardCliente() {
                                     )}
                                 </div>
 
-                                {/* Cuerpo de la tarjeta */}
                                 <div className="dash-card-body">
+                                    {/* Clic en Título -> Detalle del Servicio */}
                                     <h3 
                                         className="dash-card-title"
                                         onClick={() => navigate(`/servicio/${s.id_servicio}`)}
@@ -141,11 +138,15 @@ export default function DashboardCliente() {
                                         {s.nombre}
                                     </h3>
                                     
-                                    {/* Clic al perfil del proveedor con resolución tolerante de ID */}
+                                    {/* Clic en Nombre -> Detalle del Proveedor */}
                                     <p 
                                         className="dash-card-provider"
-                                        onClick={() => idProveedor && navigate(`/proveedor/${idProveedor}`)}
-                                        title="Ver perfil profesional del proveedor"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (idProveedor) navigate(`/proveedor/${idProveedor}`);
+                                        }}
+                                        style={{ cursor: idProveedor ? 'pointer' : 'default', textDecoration: idProveedor ? 'underline' : 'none' }}
+                                        title="Ver perfil del profesional"
                                     >
                                         👤 {nombreProveedor}
                                     </p>
@@ -166,7 +167,7 @@ export default function DashboardCliente() {
                                             {s.categoria ? s.categoria.toUpperCase() : 'GENERAL'}
                                         </span>
                                         <span className="dash-tag">
-                                            {primerBarrio.toUpperCase()}
+                                            {zonaPrincipal.toUpperCase()}
                                         </span>
                                     </div>
 
@@ -175,14 +176,20 @@ export default function DashboardCliente() {
                                         <button
                                             type="button"
                                             className="btn-card-detalle"
-                                            onClick={() => navigate(`/servicio/${s.id_servicio}`)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/servicio/${s.id_servicio}`);
+                                            }}
                                         >
                                             Ver y Agendar
                                         </button>
                                         <button
                                             type="button"
                                             className="btn-card-prov"
-                                            onClick={() => idProveedor && navigate(`/proveedor/${idProveedor}`)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (idProveedor) navigate(`/proveedor/${idProveedor}`);
+                                            }}
                                             disabled={!idProveedor}
                                         >
                                             Ver Proveedor

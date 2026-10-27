@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import Alerta from '../components/common/Alerta';
+import { proveedoresService } from '../services/proveedores.service';
+import { disponibilidadService } from '../services/disponibilidad.service';
 import './DetalleProveedor.css';
+
+const DIAS_SEMANA = [
+    { id: 'LU', nombre: 'Lunes' },
+    { id: 'MA', nombre: 'Martes' },
+    { id: 'MI', nombre: 'Miércoles' },
+    { id: 'JU', nombre: 'Jueves' },
+    { id: 'VI', nombre: 'Viernes' },
+    { id: 'SA', nombre: 'Sábado' },
+    { id: 'DO', nombre: 'Domingo' }
+];
 
 export default function DetalleProveedor() {
     const { id } = useParams();
@@ -9,52 +22,57 @@ export default function DetalleProveedor() {
 
     const [proveedor, setProveedor] = useState(null);
     const [servicios, setServicios] = useState([]);
+    const [disponibilidad, setDisponibilidad] = useState([]);
+    const [periodos, setPeriodos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
-    
-    // Modal para HU-010 Criterio 4: Detalle completo del servicio
     const [servicioSeleccionado, setServicioSeleccionado] = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('x-token');
-        const rol = localStorage.getItem('usuario_rol');
-
-        if (!token || rol !== 'C') {
-            navigate('/login');
-            return;
-        }
-
         const cargarDatosProveedor = async () => {
             setCargando(true);
             setError(null);
             try {
-                const res = await fetch(`/api/proveedores/${id}`);
-                const data = await res.json();
+                const data = await proveedoresService.obtenerDetalleProveedor(id);
+                setProveedor(data.proveedor);
+                setServicios(data.servicios || []);
 
-                if (res.ok) {
-                    setProveedor(data.proveedor);
-                    setServicios(data.servicios || []);
+                if (data.disponibilidad) {
+                    setDisponibilidad(data.disponibilidad);
+                    setPeriodos(data.periodos_no_disponibles || []);
                 } else {
-                    setError(data.msg || 'Proveedor no encontrado');
+                    try {
+                        const dataDisp = await disponibilidadService.obtenerDisponibilidadProveedor(id);
+                        setDisponibilidad(dataDisp.disponibilidad || []);
+                        setPeriodos(dataDisp.periodos_no_disponibles || []);
+                    } catch {
+                        setDisponibilidad([]);
+                        setPeriodos([]);
+                    }
                 }
             } catch (err) {
-                console.error(err);
-                setError('Error de conexión al cargar el perfil del proveedor');
+                setError(err.message || 'Error al cargar el perfil del proveedor');
             } finally {
                 setCargando(false);
             }
         };
 
-        cargarDatosProveedor();
-    }, [id, navigate]);
+        if (id) {
+            cargarDatosProveedor();
+        }
+    }, [id]);
 
-    // Agrupación de zonas por ciudad para presentación clara
-    const zonasAgrupadas = proveedor?.zonas?.reduce((acc, z) => {
-        const c = z.Comuna?.nombre || z.comuna || 'Cali';
-        if (!acc[c]) acc[c] = [];
-        acc[c].push(z.barrio);
+    const zonasAgrupadas = (proveedor?.zonas || []).reduce((acc, z) => {
+        const comunaNombre = z.comuna || 'Comuna en Cali';
+        if (!acc[comunaNombre]) acc[comunaNombre] = [];
+        if (z.barrio) acc[comunaNombre].push(z.barrio);
         return acc;
-    }, {}) || {};
+    }, {});
+
+    const formatearFecha = (fechaStr) => {
+        if (!fechaStr) return '';
+        return String(fechaStr).slice(0, 10);
+    };
 
     if (cargando) {
         return (
@@ -65,16 +83,15 @@ export default function DetalleProveedor() {
         );
     }
 
-    if (error) {
+    if (error || !proveedor) {
         return (
             <div className="detalle-prov-wrapper">
                 <Navbar />
-                <div className="detalle-prov-error-container">
-                    <h3>Atención</h3>
-                    <p>{error}</p>
-                    <button onClick={() => navigate('/dashboard-cliente')} className="btn-volver">
-                        ← Regresar a la exploración
-                    </button>
+                <div className="detalle-prov-container">
+                    <Alerta tipo="error" mensaje={error || 'Proveedor no encontrado'} />
+                    <Link to="/dashboard-cliente" className="btn-volver-link">
+                        ← Regresar a la exploración de servicios
+                    </Link>
                 </div>
             </div>
         );
@@ -85,53 +102,109 @@ export default function DetalleProveedor() {
             <Navbar />
 
             <main className="detalle-prov-container">
-                {/* CABECERA: PERFIL DEL PROFESIONAL */}
+                <Link to="/dashboard-cliente" className="btn-volver-link">
+                    ← Volver a exploración de servicios
+                </Link>
+
+                {/* 1. FICHA PRINCIPAL DEL PROFESIONAL */}
                 <section className="perfil-card-hero">
                     <div className="perfil-hero-info">
-                        <div className="avatar-profesional-box"></div>
-                        <div>
-                            <h2>{proveedor.nombre}</h2>
+                        <div className="avatar-profesional-box">
+                            {proveedor.nombre ? proveedor.nombre.charAt(0).toUpperCase() : 'P'}
+                        </div>
+                        <div className="perfil-hero-text">
+                            <h1 className="prov-hero-title">{proveedor.nombre}</h1>
                             <p className="descripcion-profesional-txt">
-                                {proveedor.descripcion_perfil || 'Sin descripción profesional registrada.'}
+                                {proveedor.descripcion_perfil || 'Profesional de bienestar, estética y masajes a domicilio en Santiago de Cali.'}
                             </p>
                         </div>
                     </div>
 
-                    {/* ZONAS DE ATENCIÓN (HU-010 Criterio 2 y 3) */}
-                    <div className="cobertura-seccion-hero">
-                        <h4>Zonas Generales de Cobertura</h4>
-                        <p className="aviso-orientativo">
-                            ℹ️ Información orientativa. La viabilidad del desplazamiento es acordada directamente con el profesional.
-                        </p>
-
-                        {Object.keys(zonasAgrupadas).length === 0 ? (
-                            <p className="sin-zonas-txt">El proveedor no tiene zonas de cobertura registradas por el momento.</p>
-                        ) : (
-                            <div className="grupos-ciudades-wrapper">
-                                {Object.entries(zonasAgrupadas).map(([ciudad, barrios]) => (
-                                    <div key={ciudad} className="ciudad-chip-box">
-                                        <strong>📍 {ciudad}:</strong>
-                                        <div className="barrios-chips">
-                                            {barrios.map((b, idx) => (
-                                                <span key={idx} className="chip-barrio">{b}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
+                    {/* CUADRÍCULA DE COBERTURA Y HORARIOS */}
+                    <div className="prov-info-split-grid">
+                        {/* COLUMNA A: ZONAS DE COBERTURA ORIENTATIVAS */}
+                        <div className="cobertura-bloque">
+                            <div className="bloque-header">
+                                <h3 className="bloque-titulo">📍 Zonas de Atención (Santiago de Cali)</h3>
+                                <p className="bloque-aviso">
+                                    Información orientativa. El traslado exacto se confirma al momento de agendar el servicio.
+                                </p>
                             </div>
-                        )}
+
+                            {Object.keys(zonasAgrupadas).length === 0 ? (
+                                <p className="sin-datos-txt">El profesional no ha especificado barrios preferenciales de cobertura.</p>
+                            ) : (
+                                <div className="comunas-lista-wrapper">
+                                    {Object.entries(zonasAgrupadas).map(([comuna, barrios]) => (
+                                        <div key={comuna} className="comuna-item-box">
+                                            <span className="comuna-nombre-tag">{comuna}</span>
+                                            <div className="barrios-chips-container">
+                                                {barrios.map((b, idx) => (
+                                                    <span key={idx} className="chip-barrio-tag">{b}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* COLUMNA B: HORARIOS DE ATENCIÓN SEMANAL Y BLOQUEOS */}
+                        <div className="horarios-bloque">
+                            <div className="bloque-header">
+                                <h3 className="bloque-titulo">🕒 Horarios de Atención Habitual</h3>
+                                <p className="bloque-aviso">
+                                    Jornada disponible para la recepción de solicitudes y servicios a domicilio.
+                                </p>
+                            </div>
+
+                            <div className="semana-horarios-list">
+                                {DIAS_SEMANA.map((dia) => {
+                                    const franjasDia = disponibilidad.filter(f => f.dia === dia.id);
+                                    return (
+                                        <div key={dia.id} className="dia-horario-row">
+                                            <span className="dia-label">{dia.nombre}</span>
+                                            <div className="dia-franjas-chips">
+                                                {franjasDia.length === 0 ? (
+                                                    <span className="descanso-tag">Descanso</span>
+                                                ) : (
+                                                    franjasDia.map(f => (
+                                                        <span key={f.id_disponibilidad} className="franja-horaria-chip">
+                                                            {f.hora_inicio.slice(0, 5)} - {f.hora_fin.slice(0, 5)}
+                                                        </span>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {periodos.length > 0 && (
+                                <div className="periodos-bloqueo-box">
+                                    <span className="bloqueo-title">📅 Próximos Periodos No Disponibles:</span>
+                                    <div className="periodos-tags-list">
+                                        {periodos.map(p => (
+                                            <span key={p.id} className="periodo-badge">
+                                                {formatearFecha(p.fecha_inicio)} al {formatearFecha(p.fecha_fin)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </section>
 
-                {/* CATÁLOGO DE SERVICIOS ACTIVOS DEL PROVEEDOR */}
+                {/* 2. CATÁLOGO DE SERVICIOS ACTIVOS */}
                 <section className="catalogo-servicios-seccion">
                     <div className="catalogo-header">
-                        <h3>Catálogo de Servicios</h3>
+                        <h2 className="catalogo-titulo">Servicios Publicados por este Profesional</h2>
                         <span className="total-servicios-badge">{servicios.length} servicios disponibles</span>
                     </div>
 
                     {servicios.length === 0 ? (
-                        <p className="sin-servicios-txt">Este proveedor no tiene servicios activos publicados actualmente.</p>
+                        <p className="sin-servicios-txt">Este profesional no tiene servicios activos publicados en este momento.</p>
                     ) : (
                         <div className="servicios-prov-grid">
                             {servicios.map((s) => {
@@ -142,18 +215,26 @@ export default function DetalleProveedor() {
                                     <article key={s.id_servicio} className="servicio-prov-card">
                                         <div className="servicio-card-cover">
                                             {miniatura?.url_archivo ? (
-                                                <img src={miniatura.url_archivo} alt={s.nombre} />
+                                                <img 
+                                                    src={`${miniatura.url_archivo}?tr=w-400,h-200,fo-auto`} 
+                                                    alt={s.nombre} 
+                                                    className="servicio-img-cover" 
+                                                />
                                             ) : (
-                                                <div className="cover-empty">[Sin Imagen]</div>
+                                                <div className="cover-empty-placeholder">
+                                                    <span className="cover-oval"></span>
+                                                    <span className="cover-txt">[Sin Imagen]</span>
+                                                </div>
                                             )}
                                         </div>
+
                                         <div className="servicio-card-body">
                                             <span className="tag-categoria-pill">{s.categoria}</span>
-                                            <h4>{s.nombre}</h4>
-                                            <p className="desc-corta">{s.descripcion}</p>
+                                            <h3 className="servicio-card-title">{s.nombre}</h3>
+                                            <p className="desc-corta">{s.descripcion || 'Sin descripción detallada'}</p>
 
                                             <div className="servicio-meta-row">
-                                                <span className="precio-val">${Number(s.precio).toLocaleString()}</span>
+                                                <span className="precio-val">${Number(s.precio).toLocaleString()} COP</span>
                                                 <span className="duracion-val">⏱ {s.duracion_minutos} min</span>
                                             </div>
 
@@ -163,14 +244,14 @@ export default function DetalleProveedor() {
                                                     className="btn-ver-detalle"
                                                     onClick={() => setServicioSeleccionado(s)}
                                                 >
-                                                    Ver Detalle
+                                                    Vista Rápida
                                                 </button>
                                                 <button 
                                                     type="button" 
                                                     className="btn-solicitar-servicio"
-                                                    onClick={() => alert(`para el otro sprint`)}
+                                                    onClick={() => navigate(`/servicio/${s.id_servicio}`)}
                                                 >
-                                                    Solicitar
+                                                    Agendar Cita
                                                 </button>
                                             </div>
                                         </div>
@@ -181,58 +262,59 @@ export default function DetalleProveedor() {
                     )}
                 </section>
 
-                {/* MODAL HU-010: DETALLE COMPLETO DEL SERVICIO Y RECURSOS */}
+                {/* 3. MODAL DE VISTA RÁPIDA DE SERVICIO */}
                 {servicioSeleccionado && (
                     <div className="modal-overlay" onClick={() => setServicioSeleccionado(null)}>
                         <div className="modal-detalle-card" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <h3>{servicioSeleccionado.nombre}</h3>
-                                <button className="btn-cerrar-modal" onClick={() => setServicioSeleccionado(null)}>✕</button>
+                                <button type="button" className="btn-cerrar-modal" onClick={() => setServicioSeleccionado(null)}>✕</button>
                             </div>
 
                             <div className="modal-body-scroll">
                                 <div className="modal-tags-meta">
                                     <span className="tag-categoria-pill">{servicioSeleccionado.categoria}</span>
-                                    <span>⏱ {servicioSeleccionado.duracion_minutos} minutos de sesión</span>
+                                    <span className="modal-meta-item">⏱ {servicioSeleccionado.duracion_minutos} minutos de sesión</span>
                                     <span className="precio-modal">${Number(servicioSeleccionado.precio).toLocaleString()} COP</span>
                                 </div>
 
                                 <div className="modal-campo-bloque">
-                                    <h5>Descripción Detallada</h5>
+                                    <h5>Descripción del Servicio</h5>
                                     <p>{servicioSeleccionado.descripcion}</p>
                                 </div>
 
-                                {/* Recursos multimedia (HU-008 / HU-010 Criterio 4) */}
-                                <div className="modal-campo-bloque">
-                                    <h5>Galería y Referencias Visuales</h5>
-                                    {!servicioSeleccionado.recursos || servicioSeleccionado.recursos.length === 0 ? (
-                                        <p className="sin-media-txt">No se ha registrado contenido multimedia para este servicio.</p>
-                                    ) : (
+                                {servicioSeleccionado.recursos?.length > 0 && (
+                                    <div className="modal-campo-bloque">
+                                        <h5>Fotografías de Referencia</h5>
                                         <div className="modal-galeria-grid">
                                             {servicioSeleccionado.recursos.map((r) => (
                                                 <div key={r.id_recurso} className="galeria-thumb">
                                                     {r.tipo === 'F' ? (
-                                                        <img src={r.url_archivo} alt="Foto de referencia" />
+                                                        <img src={`${r.url_archivo}?tr=w-160,h-110,fo-auto`} alt="Foto de referencia" />
                                                     ) : (
-                                                        <video src={r.url_archivo} controls />
+                                                        <div className="video-thumb-txt">🎬 Video</div>
                                                     )}
                                                 </div>
                                             ))}
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="modal-footer">
                                 <button 
-                                    className="btn-solicitar-modal"
-                                    onClick={() => {
-                                        const s = servicioSeleccionado;
-                                        setServicioSeleccionado(null);
-                                        alert(`para el proximo sprint`);
-                                    }}
+                                    type="button" 
+                                    className="btn-cerrar-outline"
+                                    onClick={() => setServicioSeleccionado(null)}
                                 >
-                                    Reservar este Servicio
+                                    Cerrar
+                                </button>
+                                <button 
+                                    type="button"
+                                    className="btn-solicitar-modal"
+                                    onClick={() => navigate(`/servicio/${servicioSeleccionado.id_servicio}`)}
+                                >
+                                    Ir a Agendar este Servicio →
                                 </button>
                             </div>
                         </div>
