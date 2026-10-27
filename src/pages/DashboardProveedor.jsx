@@ -18,6 +18,7 @@ export default function DashboardProveedor() {
     });
     const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
+    const [conmutandoEstado, setConmutandoEstado] = useState(false);
     const [error, setError] = useState(null);
     const [mensaje, setMensaje] = useState(null);
 
@@ -66,14 +67,50 @@ export default function DashboardProveedor() {
         setMensaje(null);
 
         try {
-            await serviciosService.actualizarServicio(servicioSeleccionado.id_servicio, formEdit);
+            const payload = {
+                ...formEdit,
+                duracion_minutos: parseInt(formEdit.duracion_minutos, 10),
+                precio: parseFloat(formEdit.precio)
+            };
+
+            const respuesta = await serviciosService.actualizarServicio(servicioSeleccionado.id_servicio, payload);
             setMensaje('Servicio actualizado con éxito.');
-            await cargarServicios();
-            setServicioSeleccionado(null);
+
+            // Sincronización en estado local sin recarga de pantalla
+            setServicios(prev =>
+                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio ? respuesta.servicio : s))
+            );
+            setServicioSeleccionado(respuesta.servicio);
         } catch (err) {
             setError(err.message || 'Error al actualizar el servicio.');
         } finally {
             setGuardando(false);
+        }
+    };
+
+    const handleAlternarEstado = async (e, servicio) => {
+        e.stopPropagation();
+        const nuevoEstado = servicio.estado === 'A' ? 'I' : 'A';
+        setConmutandoEstado(true);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const respuesta = await serviciosService.cambiarEstadoServicio(servicio.id_servicio, nuevoEstado);
+            setMensaje(`Servicio marcado como ${nuevoEstado === 'A' ? 'Activo' : 'Inactivo'}.`);
+
+            setServicios(prev =>
+                prev.map(s => (s.id_servicio === servicio.id_servicio ? respuesta.servicio : s))
+            );
+
+            if (servicioSeleccionado?.id_servicio === servicio.id_servicio) {
+                setServicioSeleccionado(respuesta.servicio);
+                setFormEdit(prev => ({ ...prev, estado: nuevoEstado }));
+            }
+        } catch (err) {
+            setError(err.message || 'Error al modificar el estado del servicio.');
+        } finally {
+            setConmutandoEstado(false);
         }
     };
 
@@ -82,7 +119,6 @@ export default function DashboardProveedor() {
             <NavbarProveedor />
 
             <main className="prov-container">
-                {/* Cabecera Principal */}
                 <div className="prov-header-actions">
                     <div className="prov-header-text">
                         <h1 className="prov-title">Mis Servicios Registrados</h1>
@@ -106,7 +142,6 @@ export default function DashboardProveedor() {
                     <p className="prov-loading-text">Cargando catálogo de servicios...</p>
                 ) : (
                     <div className="prov-layout-body">
-                        {/* Grilla de Tarjetas */}
                         <section className="prov-cards-grid">
                             {servicios.length === 0 ? (
                                 <p className="prov-empty-text">
@@ -123,9 +158,15 @@ export default function DashboardProveedor() {
                                             <span className="prov-badge-cat">
                                                 {s.categoria ? s.categoria.toUpperCase() : 'GENERAL'}
                                             </span>
-                                            <span className={`prov-badge-estado ${s.estado === 'A' ? 'estado-activo' : 'estado-inactivo'}`}>
+                                            <button
+                                                type="button"
+                                                className={`prov-badge-estado ${s.estado === 'A' ? 'estado-activo' : 'estado-inactivo'}`}
+                                                onClick={(e) => handleAlternarEstado(e, s)}
+                                                disabled={conmutandoEstado}
+                                                title="Haz clic para alternar estado"
+                                            >
                                                 {s.estado === 'A' ? 'Activo' : 'Inactivo'}
-                                            </span>
+                                            </button>
                                         </div>
 
                                         <h3 className="prov-card-name">{s.nombre}</h3>
@@ -147,7 +188,6 @@ export default function DashboardProveedor() {
                             )}
                         </section>
 
-                        {/* Panel Lateral de Edición */}
                         {servicioSeleccionado && (
                             <aside className="prov-edit-drawer">
                                 <div className="drawer-header">
@@ -197,6 +237,7 @@ export default function DashboardProveedor() {
                                                 name="duracion_minutos" 
                                                 value={formEdit.duracion_minutos} 
                                                 onChange={handleInputChange} 
+                                                min="1"
                                                 required 
                                             />
                                         </div>
@@ -208,20 +249,22 @@ export default function DashboardProveedor() {
                                                 value={formEdit.estado} 
                                                 onChange={handleInputChange}
                                             >
-                                                <option value="A">Activo</option>
-                                                <option value="I">Inactivo</option>
+                                                <option value="A">Activo (Visible)</option>
+                                                <option value="I">Inactivo (Oculto)</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div className="drawer-field">
-                                        <label htmlFor="precio">Precio ($)</label>
+                                        <label htmlFor="precio">Precio ($ COP)</label>
                                         <input 
                                             id="precio"
                                             type="number" 
                                             name="precio" 
                                             value={formEdit.precio} 
                                             onChange={handleInputChange} 
+                                            min="0"
+                                            step="1000"
                                             required 
                                         />
                                     </div>

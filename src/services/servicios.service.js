@@ -30,6 +30,13 @@ export const serviciosService = {
         });
     },
 
+    cambiarEstadoServicio: async (idServicio, estado) => {
+        return await apiClient(`/servicios/${idServicio}/estado`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado })
+        });
+    },
+
     subirRecursoMultimedia: async (idServicio, formData) => {
         return await apiClient(`/recursos/servicios/${idServicio}`, {
             method: 'POST',
