@@ -23,6 +23,9 @@ export default function NavbarProveedor() {
                 <Link to="/dashboard-proveedor" className="dash-prov-nav-link">
                     Mis Servicios
                 </Link>
+                <Link to="/agenda-proveedor" className="dash-prov-nav-link">
+                    Mi Disponibilidad
+                </Link>
                 <Link to="/perfil-proveedor" className="dash-prov-user-link">
                     <span className="dash-prov-avatar"></span>
                     <span>Mi Cuenta</span>
