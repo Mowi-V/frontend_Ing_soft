@@ -1,269 +1,255 @@
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
+import Alerta from '../components/common/Alerta';
 import { clientesService } from '../services/clientes.service';
 import { ubicacionesService } from '../services/ubicaciones.service';
 import './PerfilCliente.css';
 
 export default function PerfilCliente() {
-    const [editando, setEditando] = useState(false);
+    const [comunas, setComunas] = useState([]);
+    const [barriosFiltrados, setBarriosFiltrados] = useState([]);
+    const [modoEdicion, setModoEdicion] = useState(false);
     const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
     const [mensaje, setMensaje] = useState(null);
     const [error, setError] = useState(null);
 
-    const [comunas, setComunas] = useState([]);
-    const [barriosDisponibles, setBarriosDisponibles] = useState([]);
+    const [form, setForm] = useState({
+        nombre: '',
+        apellido: '',
+        correo_electronico: '',
+        id_comuna: '',
+        id_barrio: '',
+        direccion: '',
+        informacion_complementaria: ''
+    });
 
-    const [correo, setCorreo] = useState('');
-    const [nombre, setNombre] = useState('');
-    const [apellido, setApellido] = useState('');
-    const [idComuna, setIdComuna] = useState('');
-    const [idBarrio, setIdBarrio] = useState('');
-    const [direccion, setDireccion] = useState('');
-    const [infoComplementaria, setInfoComplementaria] = useState('');
+    const cargarDatos = async () => {
+        setCargando(true);
+        setError(null);
+        try {
+            const [dataPerfil, dataUbicaciones] = await Promise.all([
+                clientesService.obtenerPerfil(),
+                ubicacionesService.obtenerUbicaciones()
+            ]);
+
+            const listaComunas = dataUbicaciones || [];
+            setComunas(listaComunas);
+
+            const p = dataPerfil?.perfil || dataPerfil?.cliente || dataPerfil || {};
+
+            // DEDUCCIÓN 3FN: La comuna se extrae del Barrio asociado
+            let comunaId = p.id_comuna || p.Barrio?.id_comuna || '';
+            if (!comunaId && p.id_barrio) {
+                const comunaEncontrada = listaComunas.find(c =>
+                    (c.barrios || []).some(b => b.id_barrio === p.id_barrio)
+                );
+                if (comunaEncontrada) comunaId = comunaEncontrada.id_comuna;
+            }
+
+            setForm({
+                nombre: p.nombre || p.usuario?.nombre || '',
+                apellido: p.apellido || p.usuario?.apellido || '',
+                correo_electronico: p.correo_electronico || p.usuario?.correo_electronico || '',
+                id_comuna: comunaId,
+                id_barrio: p.id_barrio || '',
+                direccion: p.direccion || '',
+                informacion_complementaria: p.informacion_complementaria || ''
+            });
+
+            if (comunaId) {
+                const seleccionada = listaComunas.find(c => String(c.id_comuna) === String(comunaId));
+                setBarriosFiltrados(seleccionada ? seleccionada.barrios || [] : []);
+            }
+        } catch (err) {
+            setError(err.message || 'Error al cargar los datos del cliente');
+        } finally {
+            setCargando(false);
+        }
+    };
 
     useEffect(() => {
-        const cargarDatos = async () => {
-            setCargando(true);
-            setError(null);
-            try {
-                const [dataPerfil, dataUbicaciones] = await Promise.all([
-                    clientesService.obtenerPerfil(),
-                    ubicacionesService.obtenerUbicaciones()
-                ]);
-
-                setComunas(dataUbicaciones || []);
-
-                const p = dataPerfil?.perfil || dataPerfil || {};
-                setCorreo(p.correo_electronico || '');
-                setNombre(p.nombre || '');
-                setApellido(p.apellido || '');
-                setIdComuna(p.id_comuna ? String(p.id_comuna) : '');
-                setIdBarrio(p.id_barrio ? String(p.id_barrio) : '');
-                setDireccion(p.direccion || '');
-                setInfoComplementaria(p.informacion_complementaria || '');
-
-                if (p.id_comuna && dataUbicaciones) {
-                    const comunaEncontrada = dataUbicaciones.find(
-                        c => String(c.id_comuna) === String(p.id_comuna)
-                    );
-                    if (comunaEncontrada) {
-                        setBarriosDisponibles(comunaEncontrada.Barrios || []);
-                    }
-                }
-            } catch (err) {
-                setError(err.message || 'Error al cargar la información del perfil.');
-            } finally {
-                setCargando(false);
-            }
-        };
-
         cargarDatos();
     }, []);
 
     const handleComunaChange = (e) => {
-        const nuevaComunaId = e.target.value;
-        setIdComuna(nuevaComunaId);
-        setIdBarrio('');
+        const idComuna = e.target.value;
+        setForm(prev => ({ ...prev, id_comuna: idComuna, id_barrio: '' }));
 
-        const comunaEncontrada = comunas.find(c => String(c.id_comuna) === String(nuevaComunaId));
-        setBarriosDisponibles(comunaEncontrada ? comunaEncontrada.Barrios || [] : []);
+        const encontrada = comunas.find(c => String(c.id_comuna) === String(idComuna));
+        setBarriosFiltrados(encontrada ? encontrada.barrios || [] : []);
     };
 
-    const handleGuardar = async (e) => {
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setGuardando(true);
         setError(null);
         setMensaje(null);
 
-        try {
-            await clientesService.actualizarPerfil({
-                nombre,
-                apellido,
-                id_comuna: parseInt(idComuna, 10),
-                id_barrio: parseInt(idBarrio, 10),
-                direccion,
-                informacion_complementaria: infoComplementaria
-            });
+        // Envío 3FN: solo se persiste id_barrio
+        const payload = {
+            nombre: form.nombre.trim(),
+            apellido: form.apellido.trim(),
+            id_barrio: parseInt(form.id_barrio, 10),
+            direccion: form.direccion.trim(),
+            informacion_complementaria: form.informacion_complementaria ? form.informacion_complementaria.trim() : null
+        };
 
-            localStorage.setItem('usuario_nombre', nombre);
-            setMensaje('Perfil actualizado correctamente.');
-            setEditando(false);
+        try {
+            await clientesService.actualizarPerfil(payload);
+            setMensaje('Información actualizada correctamente.');
+            setModoEdicion(false);
         } catch (err) {
-            setError(err.message || 'Error al guardar los cambios.');
+            setError(err.message || 'Error al actualizar el perfil.');
         } finally {
             setGuardando(false);
         }
     };
-
-    if (cargando) {
-        return (
-            <div className="perfil-cliente-wrapper">
-                <Navbar />
-                <div className="perfil-cargando">Cargando datos de la cuenta...</div>
-            </div>
-        );
-    }
 
     return (
         <div className="perfil-cliente-wrapper">
             <Navbar />
 
             <main className="perfil-container">
-                {/* Tarjeta 1: Cabecera con Avatar */}
-                <div className="perfil-header-card">
-                    <div className="perfil-avatar-circle"></div>
+                <header className="perfil-header-card">
+                    <div className="perfil-avatar-circle">
+                        {form.nombre ? form.nombre.charAt(0).toUpperCase() : 'C'}
+                    </div>
                     <div className="perfil-header-text">
-                        <h1 className="perfil-header-title">Mi Cuenta</h1>
-                        <p className="perfil-header-subtitle">
-                            Consulta y administra tus datos personales y dirección de atención en Cali
-                        </p>
+                        <h2 className="perfil-header-title">{form.nombre} {form.apellido}</h2>
+                        <p className="perfil-header-subtitle">{form.correo_electronico}</p>
                     </div>
-                </div>
+                </header>
 
-                {/* Tarjeta 2: Formulario de Datos */}
-                <div className="perfil-form-card">
-                    <div className="perfil-top-actions">
-                        <span className={`perfil-badge-estado ${editando ? 'modo-edicion' : 'modo-lectura'}`}>
-                            {editando ? 'Modo Edición Activado' : 'Campos Bloqueados (Solo Lectura)'}
-                        </span>
+                <Alerta tipo="exito" mensaje={mensaje} onClose={() => setMensaje(null)} />
+                <Alerta tipo="error" mensaje={error} onClose={() => setError(null)} />
 
-                        {!editando ? (
+                {cargando ? (
+                    <p className="perfil-cargando">Cargando perfil...</p>
+                ) : (
+                    <div className="perfil-form-card">
+                        <div className="perfil-top-actions">
+                            <span className={`perfil-badge-estado ${modoEdicion ? 'modo-edicion' : 'modo-lectura'}`}>
+                                {modoEdicion ? 'Modo Edición' : 'Campos Bloqueados (Solo Lectura)'}
+                            </span>
                             <button
                                 type="button"
-                                className="btn-actualizar-campos"
-                                onClick={() => { setEditando(true); setMensaje(null); setError(null); }}
+                                className={modoEdicion ? 'btn-cancelar-edicion' : 'btn-actualizar-campos'}
+                                onClick={() => setModoEdicion(!modoEdicion)}
                             >
-                                ✏️ Actualizar campos
+                                {modoEdicion ? 'Cancelar' : '✏️ Actualizar campos'}
                             </button>
-                        ) : (
-                            <button
-                                type="button"
-                                className="btn-cancelar-edicion"
-                                onClick={() => setEditando(false)}
-                            >
-                                Cancelar
-                            </button>
-                        )}
-                    </div>
-
-                    {mensaje && <div className="perfil-alerta-exito">{mensaje}</div>}
-                    {error && <div className="perfil-alerta-error">{error}</div>}
-
-                    <form onSubmit={handleGuardar} className="perfil-form">
-                        <div className="perfil-form-group">
-                            <label htmlFor="correo">Correo Electrónico (No modificable):</label>
-                            <input
-                                id="correo"
-                                type="email"
-                                value={correo}
-                                disabled
-                                className="input-bloqueado"
-                            />
                         </div>
 
-                        <div className="perfil-form-row">
+                        <form className="perfil-form" onSubmit={handleSubmit}>
+                            <div className="perfil-form-row">
+                                <div className="perfil-form-group">
+                                    <label htmlFor="nombre">Nombre *</label>
+                                    <input
+                                        id="nombre"
+                                        type="text"
+                                        name="nombre"
+                                        value={form.nombre}
+                                        onChange={handleInputChange}
+                                        disabled={!modoEdicion}
+                                        className={!modoEdicion ? 'input-bloqueado' : ''}
+                                        required
+                                    />
+                                </div>
+                                <div className="perfil-form-group">
+                                    <label htmlFor="apellido">Apellido *</label>
+                                    <input
+                                        id="apellido"
+                                        type="text"
+                                        name="apellido"
+                                        value={form.apellido}
+                                        onChange={handleInputChange}
+                                        disabled={!modoEdicion}
+                                        className={!modoEdicion ? 'input-bloqueado' : ''}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="perfil-form-row">
+                                <div className="perfil-form-group">
+                                    <label htmlFor="id_comuna">Comuna (Santiago de Cali) *</label>
+                                    <select
+                                        id="id_comuna"
+                                        value={form.id_comuna}
+                                        onChange={handleComunaChange}
+                                        disabled={!modoEdicion}
+                                        className={!modoEdicion ? 'input-bloqueado' : ''}
+                                        required
+                                    >
+                                        <option value="">Seleccione una Comuna...</option>
+                                        {comunas.map(c => (
+                                            <option key={c.id_comuna} value={c.id_comuna}>{c.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="perfil-form-group">
+                                    <label htmlFor="id_barrio">Barrio *</label>
+                                    <select
+                                        id="id_barrio"
+                                        name="id_barrio"
+                                        value={form.id_barrio}
+                                        onChange={handleInputChange}
+                                        disabled={!modoEdicion || !form.id_comuna}
+                                        className={!modoEdicion ? 'input-bloqueado' : ''}
+                                        required
+                                    >
+                                        <option value="">Seleccione un Barrio...</option>
+                                        {barriosFiltrados.map(b => (
+                                            <option key={b.id_barrio} value={b.id_barrio}>{b.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
                             <div className="perfil-form-group">
-                                <label htmlFor="nombre">Nombre *:</label>
+                                <label htmlFor="direccion">Dirección Domiciliaria *</label>
                                 <input
-                                    id="nombre"
+                                    id="direccion"
                                     type="text"
-                                    value={nombre}
-                                    onChange={(e) => setNombre(e.target.value)}
-                                    disabled={!editando}
-                                    className={!editando ? 'input-bloqueado' : ''}
+                                    name="direccion"
+                                    value={form.direccion}
+                                    onChange={handleInputChange}
+                                    disabled={!modoEdicion}
+                                    className={!modoEdicion ? 'input-bloqueado' : ''}
                                     required
                                 />
                             </div>
+
                             <div className="perfil-form-group">
-                                <label htmlFor="apellido">Apellido *:</label>
-                                <input
-                                    id="apellido"
-                                    type="text"
-                                    value={apellido}
-                                    onChange={(e) => setApellido(e.target.value)}
-                                    disabled={!editando}
-                                    className={!editando ? 'input-bloqueado' : ''}
-                                    required
+                                <label htmlFor="informacion_complementaria">Información Complementaria (Opcional)</label>
+                                <textarea
+                                    id="informacion_complementaria"
+                                    name="informacion_complementaria"
+                                    rows="2"
+                                    value={form.informacion_complementaria}
+                                    onChange={handleInputChange}
+                                    disabled={!modoEdicion}
+                                    className={!modoEdicion ? 'input-bloqueado' : ''}
+                                    placeholder="Apartamento, torre, indicaciones de llegada..."
                                 />
                             </div>
-                        </div>
 
-                        <div className="perfil-form-row">
-                            <div className="perfil-form-group">
-                                <label htmlFor="comuna">Comuna (Cali) *:</label>
-                                <select
-                                    id="comuna"
-                                    value={idComuna}
-                                    onChange={handleComunaChange}
-                                    disabled={!editando}
-                                    className={!editando ? 'input-bloqueado' : ''}
-                                    required
-                                >
-                                    <option value="">Seleccione una comuna</option>
-                                    {comunas.map(c => (
-                                        <option key={c.id_comuna} value={c.id_comuna}>
-                                            {c.nombre}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="perfil-form-group">
-                                <label htmlFor="barrio">Barrio *:</label>
-                                <select
-                                    id="barrio"
-                                    value={idBarrio}
-                                    onChange={(e) => setIdBarrio(e.target.value)}
-                                    disabled={!editando || !idComuna}
-                                    className={!editando ? 'input-bloqueado' : ''}
-                                    required
-                                >
-                                    <option value="">Seleccione un barrio</option>
-                                    {barriosDisponibles.map(b => (
-                                        <option key={b.id_barrio} value={b.id_barrio}>
-                                            {b.nombre}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="perfil-form-group">
-                            <label htmlFor="direccion">Dirección principal *:</label>
-                            <input
-                                id="direccion"
-                                type="text"
-                                value={direccion}
-                                onChange={(e) => setDireccion(e.target.value)}
-                                placeholder="Ej: Carrera 10 # 5-20"
-                                disabled={!editando}
-                                className={!editando ? 'input-bloqueado' : ''}
-                                required
-                            />
-                        </div>
-
-                        <div className="perfil-form-group">
-                            <label htmlFor="infoComplementaria">Información complementaria (Opcional):</label>
-                            <textarea
-                                id="infoComplementaria"
-                                rows="3"
-                                value={infoComplementaria}
-                                onChange={(e) => setInfoComplementaria(e.target.value)}
-                                placeholder="Ej: Torre 2 Apto 401, timbre blanco"
-                                disabled={!editando}
-                                className={!editando ? 'input-bloqueado' : ''}
-                            />
-                        </div>
-
-                        {editando && (
-                            <div className="perfil-acciones-guardar">
-                                <button type="submit" className="btn-guardar-perfil" disabled={guardando}>
-                                    {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
-                                </button>
-                            </div>
-                        )}
-                    </form>
-                </div>
+                            {modoEdicion && (
+                                <div className="perfil-acciones-guardar">
+                                    <button type="submit" className="btn-guardar-perfil" disabled={guardando}>
+                                        {guardando ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                )}
             </main>
         </div>
     );

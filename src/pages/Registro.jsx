@@ -67,7 +67,6 @@ export default function Registro() {
         };
 
         if (rol === 'cliente') {
-            payload.id_comuna = parseInt(idComuna, 10);
             payload.id_barrio = parseInt(idBarrio, 10);
             payload.direccion = direccion;
             payload.informacion_complementaria = informacionComplementaria;

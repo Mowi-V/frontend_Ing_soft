@@ -14,10 +14,10 @@ export const proveedoresService = {
         });
     },
 
-    agregarZona: async (id_comuna, id_barrio) => {
+    agregarZona: async (id_barrio) => {
         return await apiClient('/proveedores/zonas', {
             method: 'POST',
-            body: JSON.stringify({ id_comuna, id_barrio })
+            body: JSON.stringify({ id_barrio })
         });
     },
 
@@ -34,7 +34,6 @@ export const proveedoresService = {
         });
     },
 
-    
     obtenerDetalleProveedor: async (idProveedor) => {
         return await apiClient(`/proveedores/${idProveedor}`, {
             method: 'GET'
