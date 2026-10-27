@@ -37,10 +37,41 @@ export const serviciosService = {
         });
     },
 
+    obtenerInsumos: async (idServicio) => {
+        return await apiClient(`/servicios/${idServicio}/insumos`, {
+            method: 'GET'
+        });
+    },
+
+    agregarInsumo: async (idServicio, nombre) => {
+        return await apiClient(`/servicios/${idServicio}/insumos`, {
+            method: 'POST',
+            body: JSON.stringify({ nombre })
+        });
+    },
+
+    eliminarInsumo: async (idServicio, idInsumo) => {
+        return await apiClient(`/servicios/${idServicio}/insumos/${idInsumo}`, {
+            method: 'DELETE'
+        });
+    },
+
+    obtenerRecursos: async (idServicio) => {
+        return await apiClient(`/servicios/${idServicio}/recursos`, {
+            method: 'GET'
+        });
+    },
+
     subirRecursoMultimedia: async (idServicio, formData) => {
-        return await apiClient(`/recursos/servicios/${idServicio}`, {
+        return await apiClient(`/servicios/${idServicio}/recursos`, {
             method: 'POST',
             body: formData
+        });
+    },
+
+    eliminarRecursoMultimedia: async (idServicio, idRecurso) => {
+        return await apiClient(`/servicios/${idServicio}/recursos/${idRecurso}`, {
+            method: 'DELETE'
         });
     }
 };

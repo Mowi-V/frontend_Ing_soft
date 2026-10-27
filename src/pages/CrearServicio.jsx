@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import NavbarProveedor from '../components/NavbarProveedor';
+import { authService } from '../services/auth.service';
+import { serviciosService } from '../services/servicios.service';
+import { ROLES } from '../utils/constants';
 import './CrearServicio.css';
 
 export default function CrearServicio() {
@@ -22,15 +25,12 @@ export default function CrearServicio() {
     const [error, setError] = useState(null);
     const [exito, setExito] = useState(null);
 
-    // Validación de sesión y rol
+    // Validación de sesión y rol alineada con authService
     useEffect(() => {
-        const token = localStorage.getItem('x-token');
-        const rol = localStorage.getItem('usuario_rol');
-
-        if (!token || rol !== 'P') {
-            window.location.href = '/login';
+        if (!authService.isAuthenticated() || authService.getRol() !== ROLES.PROVEEDOR) {
+            navigate('/login', { replace: true });
         }
-    }, []);
+    }, [navigate]);
 
     // Carga de imágenes locales y generación de previews
     const handleImagenesChange = (e) => {
@@ -67,8 +67,6 @@ export default function CrearServicio() {
         setExito(null);
         setLoading(true);
 
-        const token = localStorage.getItem('x-token');
-
         // Paso 1: Registrar el Servicio principal (HU-006)
         const payloadServicio = {
             nombre,
@@ -80,23 +78,7 @@ export default function CrearServicio() {
         };
 
         try {
-            const res = await fetch('/api/servicios', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-token': token
-                },
-                body: JSON.stringify(payloadServicio)
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                setError(data.msg || 'Error al crear el servicio');
-                setLoading(false);
-                return;
-            }
-
+            const data = await serviciosService.crearServicio(payloadServicio);
             const idNuevoServicio = data.servicio.id_servicio;
 
             // Paso 2: Subir recursos multimedia si existen (HU-008)
@@ -104,36 +86,28 @@ export default function CrearServicio() {
                 for (let i = 0; i < imagenes.length; i++) {
                     const formData = new FormData();
                     formData.append('recurso', imagenes[i].file);
-                    formData.append('es_miniatura', i === miniaturaIndex ? 'true' : 'false');
+                    formData.append('es_miniatura', i === miniaturaIndex);
 
-                    await fetch(`/api/servicios/${idNuevoServicio}/recursos`, {
-                        method: 'POST',
-                        headers: { 'x-token': token },
-                        body: formData
-                    });
+                    await serviciosService.subirRecursoMultimedia(idNuevoServicio, formData);
                 }
 
                 for (let i = 0; i < videos.length; i++) {
                     const formData = new FormData();
                     formData.append('recurso', videos[i].file);
-                    formData.append('es_miniatura', 'false');
+                    formData.append('es_miniatura', false);
 
-                    await fetch(`/api/servicios/${idNuevoServicio}/recursos`, {
-                        method: 'POST',
-                        headers: { 'x-token': token },
-                        body: formData
-                    });
+                    await serviciosService.subirRecursoMultimedia(idNuevoServicio, formData);
                 }
             }
 
             setExito('¡Servicio y multimedia registrados exitosamente en tu catálogo!');
             setTimeout(() => {
-                navigate('/dashboard-proveedor'); // 🌟 Navegación sin recarga
+                navigate('/dashboard-proveedor');
             }, 1500);
 
         } catch (err) {
             console.error(err);
-            setError('Error de conexión al guardar el servicio');
+            setError(err.message || 'Error al guardar el servicio');
         } finally {
             setLoading(false);
         }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavbarProveedor from '../components/NavbarProveedor';
+import Alerta from '../components/common/Alerta';
 import { serviciosService } from '../services/servicios.service';
 import './DashboardProveedor.css';
 
@@ -16,6 +17,16 @@ export default function DashboardProveedor() {
         estado: 'A',
         descripcion: ''
     });
+
+    // Estados para insumos
+    const [nuevoInsumoNombre, setNuevoInsumoNombre] = useState('');
+    const [guardandoInsumo, setGuardandoInsumo] = useState(false);
+
+    // Estados para multimedia
+    const [archivoSubir, setArchivoSubir] = useState(null);
+    const [esMiniatura, setEsMiniatura] = useState(false);
+    const [subiendoArchivo, setSubiendoArchivo] = useState(false);
+
     const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
     const [conmutandoEstado, setConmutandoEstado] = useState(false);
@@ -49,6 +60,9 @@ export default function DashboardProveedor() {
             estado: s.estado,
             descripcion: s.descripcion || ''
         });
+        setNuevoInsumoNombre('');
+        setArchivoSubir(null);
+        setEsMiniatura(false);
         setMensaje(null);
         setError(null);
     };
@@ -76,11 +90,12 @@ export default function DashboardProveedor() {
             const respuesta = await serviciosService.actualizarServicio(servicioSeleccionado.id_servicio, payload);
             setMensaje('Servicio actualizado con éxito.');
 
-            // Sincronización en estado local sin recarga de pantalla
             setServicios(prev =>
-                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio ? respuesta.servicio : s))
+                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio 
+                    ? { ...respuesta.servicio, insumos: s.insumos, recursos: s.recursos } 
+                    : s))
             );
-            setServicioSeleccionado(respuesta.servicio);
+            setServicioSeleccionado(prev => ({ ...respuesta.servicio, insumos: prev.insumos, recursos: prev.recursos }));
         } catch (err) {
             setError(err.message || 'Error al actualizar el servicio.');
         } finally {
@@ -100,17 +115,131 @@ export default function DashboardProveedor() {
             setMensaje(`Servicio marcado como ${nuevoEstado === 'A' ? 'Activo' : 'Inactivo'}.`);
 
             setServicios(prev =>
-                prev.map(s => (s.id_servicio === servicio.id_servicio ? respuesta.servicio : s))
+                prev.map(s => (s.id_servicio === servicio.id_servicio 
+                    ? { ...respuesta.servicio, insumos: s.insumos, recursos: s.recursos } 
+                    : s))
             );
 
             if (servicioSeleccionado?.id_servicio === servicio.id_servicio) {
-                setServicioSeleccionado(respuesta.servicio);
+                setServicioSeleccionado(prev => ({ ...respuesta.servicio, insumos: prev.insumos, recursos: prev.recursos }));
                 setFormEdit(prev => ({ ...prev, estado: nuevoEstado }));
             }
         } catch (err) {
             setError(err.message || 'Error al modificar el estado del servicio.');
         } finally {
             setConmutandoEstado(false);
+        }
+    };
+
+    // HU-008: Agregar Insumo
+    const handleAgregarInsumo = async (e) => {
+        e.preventDefault();
+        if (!nuevoInsumoNombre.trim() || !servicioSeleccionado) return;
+
+        setGuardandoInsumo(true);
+        setError(null);
+        try {
+            const res = await serviciosService.agregarInsumo(servicioSeleccionado.id_servicio, nuevoInsumoNombre.trim());
+            const nuevo = res.insumo;
+
+            setServicioSeleccionado(prev => ({
+                ...prev,
+                insumos: [...(prev.insumos || []), nuevo]
+            }));
+
+            setServicios(prev =>
+                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio
+                    ? { ...s, insumos: [...(s.insumos || []), nuevo] }
+                    : s))
+            );
+
+            setNuevoInsumoNombre('');
+            setMensaje('Insumo registrado correctamente.');
+        } catch (err) {
+            setError(err.message || 'Error al agregar el insumo.');
+        } finally {
+            setGuardandoInsumo(false);
+        }
+    };
+
+    // HU-008: Eliminar Insumo
+    const handleEliminarInsumo = async (idInsumo) => {
+        if (!servicioSeleccionado) return;
+        setError(null);
+        try {
+            await serviciosService.eliminarInsumo(servicioSeleccionado.id_servicio, idInsumo);
+
+            setServicioSeleccionado(prev => ({
+                ...prev,
+                insumos: (prev.insumos || []).filter(i => i.id_insumo !== idInsumo)
+            }));
+
+            setServicios(prev =>
+                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio
+                    ? { ...s, insumos: (s.insumos || []).filter(i => i.id_insumo !== idInsumo) }
+                    : s))
+            );
+            setMensaje('Insumo eliminado.');
+        } catch (err) {
+            setError(err.message || 'Error al eliminar el insumo.');
+        }
+    };
+
+    // HU-008: Subir Recurso Multimedia
+    const handleSubirMultimedia = async (e) => {
+        e.preventDefault();
+        if (!archivoSubir || !servicioSeleccionado) return;
+
+        setSubiendoArchivo(true);
+        setError(null);
+
+        const formData = new FormData();
+        formData.append('recurso', archivoSubir);
+        formData.append('es_miniatura', esMiniatura);
+
+        try {
+            const res = await serviciosService.subirRecursoMultimedia(servicioSeleccionado.id_servicio, formData);
+            const nuevoRecurso = res.recurso;
+
+            // Si es miniatura, actualizar los demás en memoria
+            const recursosActualizados = (servicioSeleccionado.recursos || [])
+                .map(r => (nuevoRecurso.es_miniatura === 1 ? { ...r, es_miniatura: 0 } : r))
+                .concat(nuevoRecurso);
+
+            setServicioSeleccionado(prev => ({ ...prev, recursos: recursosActualizados }));
+            setServicios(prev =>
+                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio
+                    ? { ...s, recursos: recursosActualizados }
+                    : s))
+            );
+
+            setArchivoSubir(null);
+            setEsMiniatura(false);
+            setMensaje('Archivo multimedia subido con éxito.');
+        } catch (err) {
+            setError(err.message || 'Error al subir el archivo multimedia.');
+        } finally {
+            setSubiendoArchivo(false);
+        }
+    };
+
+    // HU-008: Eliminar Recurso Multimedia
+    const handleEliminarRecurso = async (idRecurso) => {
+        if (!servicioSeleccionado) return;
+        setError(null);
+        try {
+            await serviciosService.eliminarRecursoMultimedia(servicioSeleccionado.id_servicio, idRecurso);
+
+            const filtrados = (servicioSeleccionado.recursos || []).filter(r => r.id_recurso !== idRecurso);
+            setServicioSeleccionado(prev => ({ ...prev, recursos: filtrados }));
+            setServicios(prev =>
+                prev.map(s => (s.id_servicio === servicioSeleccionado.id_servicio
+                    ? { ...s, recursos: filtrados }
+                    : s))
+            );
+            setMensaje('Recurso multimedia eliminado.');
+        } catch (err) {
+            setError(err.message || 'Error al eliminar el archivo multimedia.');
         }
     };
 
@@ -123,7 +252,7 @@ export default function DashboardProveedor() {
                     <div className="prov-header-text">
                         <h1 className="prov-title">Mis Servicios Registrados</h1>
                         <p className="prov-subtitle">
-                            Gestiona tu catálogo, actualiza tarifas o cambia la disponibilidad de tus publicaciones.
+                            Gestiona tu catálogo, actualiza tarifas, insumos y recursos multimedia.
                         </p>
                     </div>
                     <button 
@@ -135,8 +264,8 @@ export default function DashboardProveedor() {
                     </button>
                 </div>
 
-                {mensaje && <div className="prov-alert-success">{mensaje}</div>}
-                {error && <div className="prov-alert-error">{error}</div>}
+                <Alerta tipo="exito" mensaje={mensaje} onClose={() => setMensaje(null)} />
+                <Alerta tipo="error" mensaje={error} onClose={() => setError(null)} />
 
                 {cargando ? (
                     <p className="prov-loading-text">Cargando catálogo de servicios...</p>
@@ -148,50 +277,76 @@ export default function DashboardProveedor() {
                                     No tienes servicios registrados aún. Haz clic en "+ Crear un Servicio" para comenzar.
                                 </p>
                             ) : (
-                                servicios.map((s) => (
-                                    <article 
-                                        key={s.id_servicio} 
-                                        className={`prov-service-card ${servicioSeleccionado?.id_servicio === s.id_servicio ? 'card-seleccionada' : ''}`}
-                                        onClick={() => seleccionarParaEditar(s)}
-                                    >
-                                        <div className="prov-card-header">
-                                            <span className="prov-badge-cat">
-                                                {s.categoria ? s.categoria.toUpperCase() : 'GENERAL'}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className={`prov-badge-estado ${s.estado === 'A' ? 'estado-activo' : 'estado-inactivo'}`}
-                                                onClick={(e) => handleAlternarEstado(e, s)}
-                                                disabled={conmutandoEstado}
-                                                title="Haz clic para alternar estado"
-                                            >
-                                                {s.estado === 'A' ? 'Activo' : 'Inactivo'}
-                                            </button>
-                                        </div>
+                                servicios.map((s) => {
+                                    const miniatura = (s.recursos || []).find(r => r.es_miniatura === 1) || (s.recursos || [])[0];
+                                    return (
+                                        <article 
+                                            key={s.id_servicio} 
+                                            className={`prov-service-card ${servicioSeleccionado?.id_servicio === s.id_servicio ? 'card-seleccionada' : ''}`}
+                                            onClick={() => seleccionarParaEditar(s)}
+                                        >
+                                            {miniatura && (
+                                                <div className="prov-card-thumb-container">
+                                                    <img 
+                                                        src={`${miniatura.url_archivo}?tr=w-300,h-160,fo-auto`} 
+                                                        alt={s.nombre} 
+                                                        className="prov-card-thumb" 
+                                                    />
+                                                </div>
+                                            )}
 
-                                        <h3 className="prov-card-name">{s.nombre}</h3>
-                                        <p className="prov-card-desc">{s.descripcion || 'Sin descripción'}</p>
-
-                                        <div className="prov-card-footer">
-                                            <div className="prov-card-duration">
-                                                <span className="prov-clock-icon">⏱</span> {s.duracion_minutos} min
-                                            </div>
-                                            <div className="prov-card-price-group">
-                                                <span className="prov-card-price">
-                                                    ${Number(s.precio).toLocaleString()}
+                                            <div className="prov-card-header">
+                                                <span className="prov-badge-cat">
+                                                    {s.categoria ? s.categoria.toUpperCase() : 'GENERAL'}
                                                 </span>
-                                                <span className="prov-card-edit-hint">Haz clic para editar</span>
+                                                <button
+                                                    type="button"
+                                                    className={`prov-badge-estado ${s.estado === 'A' ? 'estado-activo' : 'estado-inactivo'}`}
+                                                    onClick={(e) => handleAlternarEstado(e, s)}
+                                                    disabled={conmutandoEstado}
+                                                    title="Haz clic para alternar estado"
+                                                >
+                                                    {s.estado === 'A' ? 'Activo' : 'Inactivo'}
+                                                </button>
                                             </div>
-                                        </div>
-                                    </article>
-                                ))
+
+                                            <h3 className="prov-card-name">{s.nombre}</h3>
+                                            <p className="prov-card-desc">{s.descripcion || 'Sin descripción'}</p>
+
+                                            <div className="prov-card-tags">
+                                                {(s.insumos || []).length > 0 && (
+                                                    <span className="prov-tag-count">
+                                                        🎒 {(s.insumos || []).length} insumos
+                                                    </span>
+                                                )}
+                                                {(s.recursos || []).length > 0 && (
+                                                    <span className="prov-tag-count">
+                                                        📷 {(s.recursos || []).length} fotos/videos
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="prov-card-footer">
+                                                <div className="prov-card-duration">
+                                                    <span className="prov-clock-icon">⏱</span> {s.duracion_minutos} min
+                                                </div>
+                                                <div className="prov-card-price-group">
+                                                    <span className="prov-card-price">
+                                                        ${Number(s.precio).toLocaleString()}
+                                                    </span>
+                                                    <span className="prov-card-edit-hint">Editar</span>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    );
+                                })
                             )}
                         </section>
 
                         {servicioSeleccionado && (
                             <aside className="prov-edit-drawer">
                                 <div className="drawer-header">
-                                    <h3>Editar Servicio</h3>
+                                    <h3>Editar: {servicioSeleccionado.nombre}</h3>
                                     <button 
                                         type="button" 
                                         className="btn-close-drawer"
@@ -274,30 +429,122 @@ export default function DashboardProveedor() {
                                         <textarea 
                                             id="descripcion"
                                             name="descripcion" 
-                                            rows="3" 
+                                            rows="2" 
                                             value={formEdit.descripcion} 
                                             onChange={handleInputChange} 
                                             required 
                                         />
                                     </div>
 
-                                    <div className="drawer-buttons">
+                                    <button 
+                                        type="submit" 
+                                        className="btn-drawer-save"
+                                        disabled={guardando}
+                                    >
+                                        {guardando ? 'Guardando...' : 'Guardar Datos Comerciales'}
+                                    </button>
+                                </form>
+
+                                <hr className="drawer-divider" />
+
+                                {/* SECCIÓN HU-008: Insumos y Equipos */}
+                                <div className="drawer-section">
+                                    <h4>Insumos y Equipos Requeridos</h4>
+                                    <form onSubmit={handleAgregarInsumo} className="form-inline-add">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Ej. Aceite de almendras, toallas"
+                                            value={nuevoInsumoNombre}
+                                            onChange={(e) => setNuevoInsumoNombre(e.target.value)}
+                                            required
+                                        />
+                                        <button type="submit" disabled={guardandoInsumo}>
+                                            + Agregar
+                                        </button>
+                                    </form>
+
+                                    <div className="drawer-chips-list">
+                                        {(servicioSeleccionado.insumos || []).length === 0 ? (
+                                            <p className="drawer-subtext">No hay insumos registrados para este servicio.</p>
+                                        ) : (
+                                            (servicioSeleccionado.insumos || []).map((ins) => (
+                                                <span key={ins.id_insumo} className="drawer-chip">
+                                                    {ins.nombre}
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleEliminarInsumo(ins.id_insumo)}
+                                                        title="Eliminar insumo"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                <hr className="drawer-divider" />
+
+                                {/* SECCIÓN HU-008: Multimedia e Imágenes */}
+                                <div className="drawer-section">
+                                    <h4>Fotografías y Videos de Referencia</h4>
+                                    <form onSubmit={handleSubirMultimedia} className="form-upload-media">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*,video/*"
+                                            onChange={(e) => setArchivoSubir(e.target.files[0] || null)}
+                                            required
+                                        />
+                                        <label className="checkbox-miniatura">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={esMiniatura} 
+                                                onChange={(e) => setEsMiniatura(e.target.checked)} 
+                                            />
+                                            Establecer como imagen de portada (miniatura)
+                                        </label>
                                         <button 
                                             type="submit" 
-                                            className="btn-drawer-save"
-                                            disabled={guardando}
+                                            className="btn-upload-file"
+                                            disabled={subiendoArchivo || !archivoSubir}
                                         >
-                                            {guardando ? 'Guardando...' : 'Guardar Cambios'}
+                                            {subiendoArchivo ? 'Subiendo a la nube...' : 'Subir Archivo'}
                                         </button>
-                                        <button 
-                                            type="button" 
-                                            className="btn-drawer-cancel"
-                                            onClick={() => setServicioSeleccionado(null)}
-                                        >
-                                            Cerrar
-                                        </button>
+                                    </form>
+
+                                    <div className="drawer-media-grid">
+                                        {(servicioSeleccionado.recursos || []).length === 0 ? (
+                                            <p className="drawer-subtext">No hay fotos ni videos asociados.</p>
+                                        ) : (
+                                            (servicioSeleccionado.recursos || []).map((rec) => (
+                                                <div 
+                                                    key={rec.id_recurso} 
+                                                    className={`drawer-media-item ${rec.es_miniatura === 1 ? 'es-miniatura' : ''}`}
+                                                >
+                                                    {rec.tipo === 'F' ? (
+                                                        <img 
+                                                            src={`${rec.url_archivo}?tr=w-120,h-80,fo-auto`} 
+                                                            alt="Referencia" 
+                                                        />
+                                                    ) : (
+                                                        <div className="video-placeholder">🎬 Video</div>
+                                                    )}
+                                                    {rec.es_miniatura === 1 && (
+                                                        <span className="badge-portada">Portada</span>
+                                                    )}
+                                                    <button 
+                                                        type="button"
+                                                        className="btn-del-media"
+                                                        onClick={() => handleEliminarRecurso(rec.id_recurso)}
+                                                        title="Eliminar archivo"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
-                                </form>
+                                </div>
                             </aside>
                         )}
                     </div>
