@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { ROLES } from '../utils/constants';
@@ -13,6 +13,16 @@ export default function Login() {
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState(null);
 
+    useEffect(() => {
+        const comprobarSesion = async () => {
+            const usuario = await authService.verificarSesionServidor();
+            if (usuario) {
+                navigate(usuario.rol === ROLES.PROVEEDOR ? '/dashboard-proveedor' : '/dashboard-cliente', { replace: true });
+            }
+        };
+        comprobarSesion();
+    }, [navigate]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredenciales(prev => ({ ...prev, [name]: value }));
@@ -26,14 +36,9 @@ export default function Login() {
         try {
             const data = await authService.login(credenciales);
             const rol = data.usuario?.rol;
-
-            if (rol === ROLES.PROVEEDOR) {
-                navigate('/dashboard-proveedor');
-            } else {
-                navigate('/dashboard-cliente');
-            }
+            navigate(rol === ROLES.PROVEEDOR ? '/dashboard-proveedor' : '/dashboard-cliente');
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Credenciales incorrectas');
         } finally {
             setCargando(false);
         }

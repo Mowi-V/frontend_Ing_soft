@@ -1,10 +1,30 @@
+import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { ROLES } from '../utils/constants';
 
 export default function ProtectedRoute({ rolPermitido }) {
-    const autenticado = authService.isAuthenticated();
-    const rolUsuario = authService.getRol();
+    const [cargando, setCargando] = useState(true);
+    const [autenticado, setAutenticado] = useState(false);
+    const [rolUsuario, setRolUsuario] = useState(null);
+
+    useEffect(() => {
+        const validar = async () => {
+            const usuario = await authService.verificarSesionServidor();
+            if (usuario) {
+                setAutenticado(true);
+                setRolUsuario(usuario.rol);
+            } else {
+                setAutenticado(false);
+            }
+            setCargando(false);
+        };
+        validar();
+    }, []);
+
+    if (cargando) {
+        return <div style={{ textAlign: 'center', padding: '60px' }}>Verificando sesión segura...</div>;
+    }
 
     if (!autenticado) {
         return <Navigate to="/login" replace />;
