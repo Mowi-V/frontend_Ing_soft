@@ -58,13 +58,20 @@ export default function PerfilProveedor() {
         cargarDatos();
     }, []);
 
+    // Corrección: lectura tolerante a Barrios / barrios
     const handleComunaChange = (e) => {
         const idComuna = e.target.value;
         setComunaSeleccionada(idComuna);
         setBarrioSeleccionado('');
 
+        if (!idComuna) {
+            setBarriosFiltrados([]);
+            return;
+        }
+
         const encontrada = comunas.find(c => String(c.id_comuna) === String(idComuna));
-        setBarriosFiltrados(encontrada ? encontrada.barrios || [] : []);
+        const listaBarrios = encontrada ? (encontrada.Barrios || encontrada.barrios || []) : [];
+        setBarriosFiltrados(listaBarrios);
     };
 
     const handleGuardarPerfil = async (e) => {
@@ -138,7 +145,6 @@ export default function PerfilProveedor() {
         }
     };
 
-    // Agrupación por Comuna anidada (3FN)
     const zonasAgrupadasPorComuna = zonasRegistradas.reduce((acc, z) => {
         const nombreComuna = z.Barrio?.Comuna?.nombre || z.Comuna?.nombre || 'Comuna General';
         if (!acc[nombreComuna]) acc[nombreComuna] = [];
@@ -168,7 +174,6 @@ export default function PerfilProveedor() {
                     <p className="perfil-prov-cargando">Cargando datos profesionales...</p>
                 ) : (
                     <>
-                        {/* TARJETA 1: INFORMACIÓN PROFESIONAL */}
                         <div className="perfil-card-bloque">
                             <div className="perfil-top-actions">
                                 <span className={`perfil-badge-estado ${modoEdicion ? 'modo-edicion' : 'modo-lectura'}`}>
@@ -234,7 +239,6 @@ export default function PerfilProveedor() {
                             </form>
                         </div>
 
-                        {/* TARJETA 2: ZONAS DE COBERTURA DOMICILIARIA */}
                         <div className="perfil-card-bloque">
                             <div className="zonas-header-box">
                                 <h3 className="zonas-titulo-principal">Zonas de Cobertura Domiciliaria</h3>
@@ -265,9 +269,13 @@ export default function PerfilProveedor() {
                                             id="barrio_sel"
                                             value={barrioSeleccionado}
                                             onChange={(e) => setBarrioSeleccionado(e.target.value)}
-                                            disabled={!comunaSeleccionada}
+                                            disabled={!comunaSeleccionada || barriosFiltrados.length === 0}
                                         >
-                                            <option value="">Seleccione un Barrio...</option>
+                                            <option value="">
+                                                {barriosFiltrados.length === 0 && comunaSeleccionada 
+                                                    ? 'No hay barrios disponibles' 
+                                                    : 'Seleccione un Barrio...'}
+                                            </option>
                                             {barriosFiltrados.map(b => (
                                                 <option key={b.id_barrio} value={b.id_barrio}>{b.nombre}</option>
                                             ))}

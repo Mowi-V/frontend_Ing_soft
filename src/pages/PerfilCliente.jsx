@@ -42,7 +42,7 @@ export default function PerfilCliente() {
             let comunaId = p.id_comuna || p.Barrio?.id_comuna || '';
             if (!comunaId && p.id_barrio) {
                 const comunaEncontrada = listaComunas.find(c =>
-                    (c.barrios || []).some(b => b.id_barrio === p.id_barrio)
+                    (c.Barrios || c.barrios || []).some(b => b.id_barrio === p.id_barrio)
                 );
                 if (comunaEncontrada) comunaId = comunaEncontrada.id_comuna;
             }
@@ -57,9 +57,11 @@ export default function PerfilCliente() {
                 informacion_complementaria: p.informacion_complementaria || ''
             });
 
+            // Precarga de barrios tolerante a mayúsculas/minúsculas de Sequelize
             if (comunaId) {
                 const seleccionada = listaComunas.find(c => String(c.id_comuna) === String(comunaId));
-                setBarriosFiltrados(seleccionada ? seleccionada.barrios || [] : []);
+                const barriosLista = seleccionada ? (seleccionada.Barrios || seleccionada.barrios || []) : [];
+                setBarriosFiltrados(barriosLista);
             }
         } catch (err) {
             setError(err.message || 'Error al cargar los datos del cliente');
@@ -76,8 +78,14 @@ export default function PerfilCliente() {
         const idComuna = e.target.value;
         setForm(prev => ({ ...prev, id_comuna: idComuna, id_barrio: '' }));
 
+        if (!idComuna) {
+            setBarriosFiltrados([]);
+            return;
+        }
+
         const encontrada = comunas.find(c => String(c.id_comuna) === String(idComuna));
-        setBarriosFiltrados(encontrada ? encontrada.barrios || [] : []);
+        const barriosLista = encontrada ? (encontrada.Barrios || encontrada.barrios || []) : [];
+        setBarriosFiltrados(barriosLista);
     };
 
     const handleInputChange = (e) => {
