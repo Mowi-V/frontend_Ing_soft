@@ -96,18 +96,26 @@ export default function DashboardCliente() {
                         const miniatura = s.recursos?.find(r => r.es_miniatura === 1 && r.tipo === 'F') 
                                        || s.recursos?.find(r => r.tipo === 'F');
 
+                        const idProveedor = s.id_proveedor || s.Proveedor?.id_proveedor;
+
                         const nombreProveedor = s.Proveedor?.Usuario 
                             ? `${s.Proveedor.Usuario.nombre} ${s.Proveedor.Usuario.apellido || ''}`.trim()
-                            : (s.Proveedor?.nombre || s.nombre_proveedor || 'proveedor');
+                            : (s.Proveedor?.nombre || s.nombre_proveedor || 'Profesional de bienestar');
 
-                        const zonaPrincipal = s.Proveedor?.ZonaAtencions?.[0]?.Ciudad?.nombre 
-                                           || s.ciudad 
-                                           || 'SANTIAGO DE CALI';
+                        const primerBarrio = s.Proveedor?.ZonaAtencions?.[0]?.Barrio?.nombre 
+                                          || s.Proveedor?.ZonaAtencions?.[0]?.Ciudad?.nombre 
+                                          || s.ciudad 
+                                          || 'Santiago de Cali';
 
                         return (
                             <article key={s.id_servicio} className="dash-card">
-                                {/* Cabecera de la tarjeta: Imagen o Placeholder */}
-                                <div className="dash-card-image-box">
+                                {/* Cabecera de la tarjeta: Clic lleva al Detalle del Servicio */}
+                                <div 
+                                    className="dash-card-image-box" 
+                                    onClick={() => navigate(`/servicio/${s.id_servicio}`)}
+                                    style={{ cursor: 'pointer' }}
+                                    title="Ver detalle del servicio"
+                                >
                                     {miniatura?.url_archivo ? (
                                         <img 
                                             src={miniatura.url_archivo} 
@@ -124,11 +132,20 @@ export default function DashboardCliente() {
 
                                 {/* Cuerpo de la tarjeta */}
                                 <div className="dash-card-body">
-                                    <h3 className="dash-card-title">{s.nombre}</h3>
+                                    <h3 
+                                        className="dash-card-title"
+                                        onClick={() => navigate(`/servicio/${s.id_servicio}`)}
+                                        style={{ cursor: 'pointer' }}
+                                        title="Ver detalle del servicio"
+                                    >
+                                        {s.nombre}
+                                    </h3>
                                     
+                                    {/* Clic al perfil del proveedor con resolución tolerante de ID */}
                                     <p 
                                         className="dash-card-provider"
-                                        onClick={() => s.id_proveedor && navigate(`/proveedor/${s.id_proveedor}`)}
+                                        onClick={() => idProveedor && navigate(`/proveedor/${idProveedor}`)}
+                                        title="Ver perfil profesional del proveedor"
                                     >
                                         👤 {nombreProveedor}
                                     </p>
@@ -149,8 +166,27 @@ export default function DashboardCliente() {
                                             {s.categoria ? s.categoria.toUpperCase() : 'GENERAL'}
                                         </span>
                                         <span className="dash-tag">
-                                            {zonaPrincipal.toUpperCase()}
+                                            {primerBarrio.toUpperCase()}
                                         </span>
+                                    </div>
+
+                                    {/* Botones de Navegación Explícitos */}
+                                    <div className="dash-card-actions">
+                                        <button
+                                            type="button"
+                                            className="btn-card-detalle"
+                                            onClick={() => navigate(`/servicio/${s.id_servicio}`)}
+                                        >
+                                            Ver y Agendar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn-card-prov"
+                                            onClick={() => idProveedor && navigate(`/proveedor/${idProveedor}`)}
+                                            disabled={!idProveedor}
+                                        >
+                                            Ver Proveedor
+                                        </button>
                                     </div>
                                 </div>
                             </article>

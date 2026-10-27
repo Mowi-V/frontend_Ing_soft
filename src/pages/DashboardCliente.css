@@ -259,3 +259,50 @@
     text-align: center;
     padding: 40px 0;
 }
+.dash-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.btn-card-detalle {
+    flex: 1.2;
+    background-color: #111827;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-card-detalle:hover {
+    background-color: #1f2937;
+}
+
+.btn-card-prov {
+    flex: 1;
+    background-color: transparent;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-card-prov:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.btn-card-prov:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

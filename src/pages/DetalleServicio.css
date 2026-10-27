@@ -1,67 +1,294 @@
-.detalle-page {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 40px 20px;
+.detalle-serv-wrapper {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #111827;
 }
 
-.detalle-volver {
-  display: inline-block;
-  margin-bottom: 20px;
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-size: 14px;
+.detalle-serv-container {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 28px 20px 60px 20px;
 }
 
-.detalle-volver:hover {
-  color: var(--color-black);
+.btn-volver-catalogo {
+    display: inline-block;
+    color: #4b5563;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: color 0.15s ease;
 }
 
-.detalle-imagen {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-  border-radius: var(--radius);
-  margin-bottom: 24px;
+.btn-volver-catalogo:hover {
+    color: #111827;
 }
 
-.detalle-contenido h1 {
-  font-size: 26px;
-  font-weight: 600;
-  margin: 0 0 8px;
+.detalle-loading {
+    color: #6b7280;
+    font-size: 0.95rem;
+    text-align: center;
+    padding-top: 40px;
 }
 
-.detalle-proveedor {
-  color: var(--color-text-muted);
-  margin: 0 0 12px;
+.detalle-serv-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 32px;
+    align-items: flex-start;
 }
 
-.detalle-precio {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 4px;
+@media (max-width: 900px) {
+    .detalle-serv-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
-.detalle-duracion {
-  color: var(--color-text-muted);
-  font-size: 14px;
-  margin: 0 0 24px;
+/* Columna Izquierda: Tarjeta de Información */
+.detalle-info-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.detalle-contenido h2 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 24px 0 8px;
+.detalle-badge-cat {
+    display: inline-block;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
 }
 
-.detalle-galeria {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+.detalle-titulo {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 20px 0;
+    color: #111827;
 }
 
-.detalle-galeria img {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 6px;
+.detalle-foto-hero {
+    width: 100%;
+    height: 360px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 14px;
+}
+
+.detalle-foto-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.detalle-galeria-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+    padding-bottom: 4px;
+}
+
+.thumb-btn {
+    border: 2px solid transparent;
+    padding: 0;
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+    overflow: hidden;
+    width: 80px;
+    height: 60px;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease;
+}
+
+.thumb-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.thumb-btn.thumb-activa {
+    border-color: #2563eb;
+}
+
+.detalle-descripcion-bloque,
+.detalle-insumos-bloque,
+.detalle-proveedor-bloque {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.detalle-descripcion-bloque h3,
+.detalle-insumos-bloque h3,
+.detalle-proveedor-bloque h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    color: #111827;
+}
+
+.detalle-descripcion-bloque p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #4b5563;
+    margin: 0;
+}
+
+.insumos-chips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.insumo-chip {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 9999px;
+}
+
+.prov-nombre-txt {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
+
+.cobertura-txt {
+    font-size: 0.84rem;
+    color: #6b7280;
+}
+
+.cobertura-label {
+    font-weight: 600;
+    color: #4b5563;
+}
+
+/* Columna Derecha: Tarjeta de Solicitud */
+.detalle-reserva-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    position: sticky;
+    top: 24px;
+}
+
+.reserva-price-header {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.reserva-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.reserva-monto {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 4px 0;
+}
+
+.reserva-duracion {
+    font-size: 0.85rem;
+    color: #059669;
+    font-weight: 600;
+}
+
+.form-solicitud {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form-solicitud h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #111827;
+}
+
+.form-solic-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-solic-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-solic-group input,
+.form-solic-group textarea {
+    padding: 9px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    outline: none;
+    color: #111827;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.form-solic-group input:focus,
+.form-solic-group textarea:focus {
+    border-color: #111827;
+}
+
+.btn-enviar-solicitud {
+    background-color: #111827;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-enviar-solicitud:hover:not(:disabled) {
+    background-color: #1f2937;
+}
+
+.btn-enviar-solicitud:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.reserva-disclaimer {
+    font-size: 0.74rem;
+    color: #9ca3af;
+    text-align: center;
+    margin: 8px 0 0 0;
+    line-height: 1.3;
 }
