@@ -4,25 +4,49 @@ import Navbar from '../components/Navbar';
 import Alerta from '../components/common/Alerta';
 import { serviciosService } from '../services/servicios.service';
 import { clientesService } from '../services/clientes.service';
+import { ubicacionesService } from '../services/ubicaciones.service';
+import { disponibilidadService } from '../services/disponibilidad.service';
 import { solicitudesService } from '../services/solicitudes.service';
 import './DetalleServicio.css';
+
+const DIAS_SEMANA = [
+    { id: 'LU', nombre: 'Lunes' },
+    { id: 'MA', nombre: 'Martes' },
+    { id: 'MI', nombre: 'Miércoles' },
+    { id: 'JU', nombre: 'Jueves' },
+    { id: 'VI', nombre: 'Viernes' },
+    { id: 'SA', nombre: 'Sábado' },
+    { id: 'DO', nombre: 'Domingo' }
+];
 
 export default function DetalleServicio() {
     const { id } = useParams();
     const navigate = useNavigate();
 
     const [servicio, setServicio] = useState(null);
+    const [perfilCliente, setPerfilCliente] = useState(null);
+    const [comunas, setComunas] = useState([]);
+    const [barriosFiltrados, setBarriosFiltrados] = useState([]);
+    const [disponibilidad, setDisponibilidad] = useState([]);
+    const [periodos, setPeriodos] = useState([]);
+
     const [cargando, setCargando] = useState(true);
     const [enviando, setEnviando] = useState(false);
     const [mensaje, setMensaje] = useState(null);
     const [error, setError] = useState(null);
     const [fotoSeleccionada, setFotoSeleccionada] = useState(null);
 
-    // Formulario de reserva
+    // Selector de modo de ubicación: 'perfil' | 'otra'
+    const [modoUbicacion, setModoUbicacion] = useState('perfil');
+
+    // Estados de ubicación personalizada
+    const [comunaSeleccionada, setComunaSeleccionada] = useState('');
+    const [barrioSeleccionado, setBarrioSeleccionado] = useState('');
+
+    // Datos del formulario de reserva
     const [formReserva, setFormReserva] = useState({
         fecha_hora_solicitada: '',
         direccion_atencion: '',
-        barrio_sector: '',
         informacion_complementaria: '',
         observaciones: ''
     });
@@ -32,10 +56,10 @@ export default function DetalleServicio() {
             setCargando(true);
             setError(null);
             try {
-                // Cargar catálogo para encontrar el servicio
-                const [dataCatalogo, dataCliente] = await Promise.all([
+                const [dataCatalogo, dataCliente, dataUbicaciones] = await Promise.all([
                     serviciosService.listarCatalogo(),
-                    clientesService.obtenerPerfil().catch(() => null)
+                    clientesService.obtenerPerfil().catch(() => null),
+                    ubicacionesService.obtenerUbicaciones().catch(() => [])
                 ]);
 
                 const encontrado = (dataCatalogo.servicios || []).find(
@@ -48,20 +72,37 @@ export default function DetalleServicio() {
                 }
 
                 setServicio(encontrado);
+                setComunas(dataUbicaciones || []);
 
-                // Configurar foto principal
-                const portada = (encontrado.recursos || []).find(r => r.es_miniatura === 1) || (encontrado.recursos || [])[0];
+                const portada = (encontrado.recursos || []).find(r => r.es_miniatura === 1 && r.tipo === 'F') 
+                             || (encontrado.recursos || [])[0];
                 if (portada) setFotoSeleccionada(portada.url_archivo);
 
-                // Precargar dirección del cliente si existe
+                // Cargar disponibilidad y bloqueos del proveedor a cargo
+                const idProv = encontrado.id_proveedor || encontrado.Proveedor?.id_proveedor;
+                if (idProv) {
+                    try {
+                        const dataDisp = await disponibilidadService.obtenerDisponibilidadProveedor(idProv);
+                        setDisponibilidad(dataDisp.disponibilidad || []);
+                        setPeriodos(dataDisp.periodos_no_disponibles || []);
+                    } catch {
+                        setDisponibilidad([]);
+                        setPeriodos([]);
+                    }
+                }
+
+                // Configurar datos del cliente si existen
                 if (dataCliente) {
-                    const perfil = dataCliente.perfil || dataCliente.cliente || dataCliente;
+                    const p = dataCliente.perfil || dataCliente.cliente || dataCliente;
+                    setPerfilCliente(p);
+
                     setFormReserva(prev => ({
                         ...prev,
-                        direccion_atencion: perfil.direccion || '',
-                        barrio_sector: perfil.barrio || perfil.Barrio?.nombre || '',
-                        informacion_complementaria: perfil.informacion_complementaria || ''
+                        direccion_atencion: p.direccion || '',
+                        informacion_complementaria: p.informacion_complementaria || ''
                     }));
+                } else {
+                    setModoUbicacion('otra');
                 }
             } catch (err) {
                 setError(err.message || 'Error al cargar los datos del servicio');
@@ -72,6 +113,43 @@ export default function DetalleServicio() {
 
         cargarDatos();
     }, [id]);
+
+    const handleCambioModoUbicacion = (modo) => {
+        setModoUbicacion(modo);
+        setError(null);
+
+        if (modo === 'perfil' && perfilCliente) {
+            setFormReserva(prev => ({
+                ...prev,
+                direccion_atencion: perfilCliente.direccion || '',
+                informacion_complementaria: perfilCliente.informacion_complementaria || ''
+            }));
+            setComunaSeleccionada('');
+            setBarrioSeleccionado('');
+            setBarriosFiltrados([]);
+        } else {
+            setFormReserva(prev => ({
+                ...prev,
+                direccion_atencion: '',
+                informacion_complementaria: ''
+            }));
+        }
+    };
+
+    const handleComunaChange = (e) => {
+        const idComuna = e.target.value;
+        setComunaSeleccionada(idComuna);
+        setBarrioSeleccionado('');
+
+        if (!idComuna) {
+            setBarriosFiltrados([]);
+            return;
+        }
+
+        const encontrada = comunas.find(c => String(c.id_comuna) === String(idComuna));
+        const listaBarrios = encontrada ? (encontrada.Barrios || encontrada.barrios || []) : [];
+        setBarriosFiltrados(listaBarrios);
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -84,27 +162,49 @@ export default function DetalleServicio() {
         setError(null);
         setMensaje(null);
 
+        let barrioFinalId = null;
+
+        if (modoUbicacion === 'perfil') {
+            barrioFinalId = perfilCliente?.id_barrio;
+            if (!barrioFinalId) {
+                setError('Tu perfil no tiene un barrio asociado. Por favor selecciona "Otra ubicación".');
+                setEnviando(false);
+                return;
+            }
+        } else {
+            if (!barrioSeleccionado) {
+                setError('Debes seleccionar una comuna y un barrio de atención.');
+                setEnviando(false);
+                return;
+            }
+            barrioFinalId = parseInt(barrioSeleccionado, 10);
+        }
+
         const payload = {
             id_servicio: parseInt(id, 10),
+            id_barrio: barrioFinalId,
             fecha_hora_solicitada: formReserva.fecha_hora_solicitada,
             direccion_atencion: formReserva.direccion_atencion.trim(),
-            barrio_sector: formReserva.barrio_sector.trim(),
             informacion_complementaria: formReserva.informacion_complementaria?.trim() || null,
             observaciones: formReserva.observaciones?.trim() || null
         };
 
         try {
             await solicitudesService.crearSolicitud(payload);
-            setMensaje('¡Solicitud creada exitosamente! El proveedor revisará tu horario.');
+            setMensaje('¡Solicitud registrada exitosamente bajo estado Pendiente!');
             setFormReserva(prev => ({ ...prev, observaciones: '' }));
         } catch (err) {
-            setError(err.message || 'Error al registrar la solicitud');
+            setError(err.message || 'Error al procesar la solicitud');
         } finally {
             setEnviando(false);
         }
     };
 
-    // Calcular fecha mínima permitida (mañana a primera hora o en 2 horas)
+    const formatearFecha = (fechaStr) => {
+        if (!fechaStr) return '';
+        return String(fechaStr).slice(0, 10);
+    };
+
     const fechaMinima = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
     return (
@@ -123,19 +223,17 @@ export default function DetalleServicio() {
                     <p className="detalle-loading">Cargando detalles del servicio...</p>
                 ) : !servicio ? null : (
                     <div className="detalle-serv-layout">
-                        {/* COLUMNA IZQUIERDA: INFORMACIÓN Y MULTIMEDIA */}
+                        {/* COLUMNA IZQUIERDA: INFORMACIÓN, MULTIMEDIA Y HORARIOS */}
                         <section className="detalle-info-card">
                             <span className="detalle-badge-cat">{servicio.categoria}</span>
                             <h1 className="detalle-titulo">{servicio.nombre}</h1>
 
-                            {/* Foto principal */}
                             {fotoSeleccionada && (
                                 <div className="detalle-foto-hero">
                                     <img src={`${fotoSeleccionada}?tr=w-700,h-380,fo-auto`} alt={servicio.nombre} />
                                 </div>
                             )}
 
-                            {/* Miniaturas de referencia */}
                             {(servicio.recursos || []).length > 1 && (
                                 <div className="detalle-galeria-strip">
                                     {(servicio.recursos || []).map((r) => (
@@ -156,10 +254,9 @@ export default function DetalleServicio() {
                                 <p>{servicio.descripcion}</p>
                             </div>
 
-                            {/* Insumos requeridos */}
                             {(servicio.insumos || []).length > 0 && (
                                 <div className="detalle-insumos-bloque">
-                                    <h3>Insumos y Equipos que Lleva el Profesional</h3>
+                                    <h3>Insumos y Equipos Empleados</h3>
                                     <div className="insumos-chips-list">
                                         {(servicio.insumos || []).map((ins) => (
                                             <span key={ins.id_insumo} className="insumo-chip">
@@ -170,7 +267,6 @@ export default function DetalleServicio() {
                                 </div>
                             )}
 
-                            {/* Datos del Proveedor */}
                             <div className="detalle-proveedor-bloque">
                                 <h3>Profesional a Domicilio</h3>
                                 <p className="prov-nombre-txt">
@@ -187,9 +283,54 @@ export default function DetalleServicio() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* HORARIOS DE ATENCIÓN SEMANAL Y BLOQUEOS DEL PROFESIONAL */}
+                            <div className="detalle-horarios-bloque">
+                                <div className="horarios-bloque-header">
+                                    <h3>🕒 Horarios de Atención del Profesional</h3>
+                                    <p className="horarios-help-txt">
+                                        Consulta la disponibilidad semanal para seleccionar un horario válido para tu cita:
+                                    </p>
+                                </div>
+
+                                <div className="semana-horarios-mini">
+                                    {DIAS_SEMANA.map((dia) => {
+                                        const franjasDia = disponibilidad.filter(f => f.dia === dia.id);
+                                        return (
+                                            <div key={dia.id} className="dia-mini-row">
+                                                <span className="dia-mini-nombre">{dia.nombre}</span>
+                                                <div className="dia-mini-franjas">
+                                                    {franjasDia.length === 0 ? (
+                                                        <span className="descanso-mini-tag">No atiende</span>
+                                                    ) : (
+                                                        franjasDia.map(f => (
+                                                            <span key={f.id_disponibilidad} className="franja-mini-chip">
+                                                                {f.hora_inicio.slice(0, 5)} - {f.hora_fin.slice(0, 5)}
+                                                            </span>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {periodos.length > 0 && (
+                                    <div className="bloqueos-mini-box">
+                                        <span className="bloqueo-mini-title">🚫 Periodos No Disponibles / Descansos:</span>
+                                        <div className="bloqueos-mini-list">
+                                            {periodos.map(p => (
+                                                <span key={p.id} className="bloqueo-mini-badge">
+                                                    {formatearFecha(p.fecha_inicio)} al {formatearFecha(p.fecha_fin)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </section>
 
-                        {/* COLUMNA DERECHA: TARJETA DE AGENDAMIENTO */}
+                        {/* COLUMNA DERECHA: PANEL DE AGENDAMIENTO */}
                         <aside className="detalle-reserva-card">
                             <div className="reserva-price-header">
                                 <span className="reserva-label">Precio del servicio</span>
@@ -201,7 +342,7 @@ export default function DetalleServicio() {
                                 <h3>Agendar Cita a Domicilio</h3>
 
                                 <div className="form-solic-group">
-                                    <label htmlFor="fecha_hora_solicitada">Fecha y Hora de Llegada *</label>
+                                    <label htmlFor="fecha_hora_solicitada">Fecha y Hora de Inicio *</label>
                                     <input
                                         id="fecha_hora_solicitada"
                                         type="datetime-local"
@@ -211,45 +352,114 @@ export default function DetalleServicio() {
                                         min={fechaMinima}
                                         required
                                     />
+                                    <span className="input-hint-horario">
+                                        Verifica los horarios del profesional a la izquierda para evitar cruces.
+                                    </span>
                                 </div>
 
+                                {/* SELECTOR DE MODO DE UBICACIÓN */}
                                 <div className="form-solic-group">
-                                    <label htmlFor="barrio_sector">Barrio o Sector *</label>
-                                    <input
-                                        id="barrio_sector"
-                                        type="text"
-                                        name="barrio_sector"
-                                        value={formReserva.barrio_sector}
-                                        onChange={handleInputChange}
-                                        placeholder="Ej. El Ingenio"
-                                        required
-                                    />
+                                    <label>Lugar de Atención *</label>
+                                    <div className="toggle-ubicacion-box">
+                                        <button
+                                            type="button"
+                                            className={`btn-toggle-ubicacion ${modoUbicacion === 'perfil' ? 'activo' : ''}`}
+                                            onClick={() => handleCambioModoUbicacion('perfil')}
+                                            disabled={!perfilCliente}
+                                        >
+                                            🏠 Mi dirección registrada
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`btn-toggle-ubicacion ${modoUbicacion === 'otra' ? 'activo' : ''}`}
+                                            onClick={() => handleCambioModoUbicacion('otra')}
+                                        >
+                                            📍 Otra ubicación
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="form-solic-group">
-                                    <label htmlFor="direccion_atencion">Dirección del Domicilio *</label>
-                                    <input
-                                        id="direccion_atencion"
-                                        type="text"
-                                        name="direccion_atencion"
-                                        value={formReserva.direccion_atencion}
-                                        onChange={handleInputChange}
-                                        placeholder="Ej. Carrera 85 # 14-20"
-                                        required
-                                    />
-                                </div>
+                                {/* CASO A: DIRECCIÓN DEL PERFIL */}
+                                {modoUbicacion === 'perfil' && perfilCliente && (
+                                    <div className="ubicacion-preview-box">
+                                        <p className="preview-barrio">
+                                            <strong>Barrio:</strong> {perfilCliente.barrio || perfilCliente.Barrio?.nombre || 'Barrio registrado'}
+                                        </p>
+                                        <p className="preview-dir">
+                                            <strong>Dirección:</strong> {perfilCliente.direccion || 'Sin dirección registrada'}
+                                        </p>
+                                        {perfilCliente.informacion_complementaria && (
+                                            <p className="preview-info">
+                                                <strong>Detalles:</strong> {perfilCliente.informacion_complementaria}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
 
-                                <div className="form-solic-group">
-                                    <label htmlFor="informacion_complementaria">Detalles del Domicilio (Opcional)</label>
-                                    <input
-                                        id="informacion_complementaria"
-                                        type="text"
-                                        name="informacion_complementaria"
-                                        value={formReserva.informacion_complementaria}
-                                        onChange={handleInputChange}
-                                        placeholder="Apto, torre, conjunto o indicaciones"
-                                    />
-                                </div>
+                                {/* CASO B: SELECTORES EN CASCADA COMUNA -> BARRIO */}
+                                {modoUbicacion === 'otra' && (
+                                    <div className="otra-ubicacion-box">
+                                        <div className="form-solic-group">
+                                            <label htmlFor="comuna_sel">Comuna (Santiago de Cali) *</label>
+                                            <select
+                                                id="comuna_sel"
+                                                value={comunaSeleccionada}
+                                                onChange={handleComunaChange}
+                                                required
+                                            >
+                                                <option value="">Seleccione una Comuna...</option>
+                                                {comunas.map(c => (
+                                                    <option key={c.id_comuna} value={c.id_comuna}>{c.nombre}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="form-solic-group">
+                                            <label htmlFor="barrio_sel">Barrio *</label>
+                                            <select
+                                                id="barrio_sel"
+                                                value={barrioSeleccionado}
+                                                onChange={(e) => setBarrioSeleccionado(e.target.value)}
+                                                disabled={!comunaSeleccionada}
+                                                required
+                                            >
+                                                <option value="">
+                                                    {!comunaSeleccionada 
+                                                        ? 'Primero seleccione una Comuna...' 
+                                                        : 'Seleccione un Barrio...'}
+                                                </option>
+                                                {barriosFiltrados.map(b => (
+                                                    <option key={b.id_barrio} value={b.id_barrio}>{b.nombre}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="form-solic-group">
+                                            <label htmlFor="direccion_atencion">Dirección Exacta *</label>
+                                            <input
+                                                id="direccion_atencion"
+                                                type="text"
+                                                name="direccion_atencion"
+                                                value={formReserva.direccion_atencion}
+                                                onChange={handleInputChange}
+                                                placeholder="Ej. Carrera 85 # 14-20"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="form-solic-group">
+                                            <label htmlFor="informacion_complementaria">Detalles de Llegada (Opcional)</label>
+                                            <input
+                                                id="informacion_complementaria"
+                                                type="text"
+                                                name="informacion_complementaria"
+                                                value={formReserva.informacion_complementaria}
+                                                onChange={handleInputChange}
+                                                placeholder="Apto, torre o indicaciones de timbre"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="form-solic-group">
                                     <label htmlFor="observaciones">Observaciones / Preferencias (Opcional)</label>
@@ -259,7 +469,7 @@ export default function DetalleServicio() {
                                         rows="2"
                                         value={formReserva.observaciones}
                                         onChange={handleInputChange}
-                                        placeholder="Detalles sobre el espacio o requerimientos especiales"
+                                        placeholder="Indica condiciones del espacio o requerimientos"
                                     />
                                 </div>
 
@@ -271,7 +481,7 @@ export default function DetalleServicio() {
                                     {enviando ? 'Verificando agenda...' : 'Confirmar y Solicitar Cita'}
                                 </button>
                                 <p className="reserva-disclaimer">
-                                    No se realiza ningún cargo en este paso. El servicio se pagará directamente con el profesional.
+                                    El valor acordado se paga directamente con el profesional.
                                 </p>
                             </form>
                         </aside>
