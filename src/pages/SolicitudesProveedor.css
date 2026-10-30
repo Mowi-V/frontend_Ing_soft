@@ -1,0 +1,380 @@
+.solic-prov-wrapper {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #111827;
+}
+
+.solic-prov-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 32px 24px 60px 24px;
+}
+
+.solic-prov-header {
+    margin-bottom: 24px;
+}
+
+.solic-prov-header h1 {
+    margin: 0 0 4px 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+}
+
+.solic-prov-header p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #6b7280;
+}
+
+/* Filtros por Estado */
+.solic-prov-filtros {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+    padding-bottom: 4px;
+}
+
+.filtro-prov-pill {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.filtro-prov-pill:hover {
+    border-color: #9ca3af;
+    color: #111827;
+}
+
+.filtro-prov-pill.activo {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+
+.solic-prov-loading {
+    color: #6b7280;
+    font-size: 0.95rem;
+    text-align: center;
+    padding-top: 40px;
+}
+
+/* Estado Vacío */
+.solic-prov-empty {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.empty-prov-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.solic-prov-empty h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.solic-prov-empty p {
+    font-size: 0.88rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* Grilla de Tarjetas del Proveedor */
+.solic-prov-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 20px;
+}
+
+.card-solicitud-prov {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-solicitud-prov:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+.card-prov-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.orden-prov-id {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.servicio-prov-title {
+    margin: 0 0 10px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.cliente-meta-box {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.cliente-nombre-txt {
+    margin: 0 0 2px 0;
+    font-size: 0.86rem;
+    color: #111827;
+}
+
+.cliente-correo-txt {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+
+.horario-cita-box {
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.horario-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.horario-tag-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.horario-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.horario-sugerido-row {
+    border-top: 1px dashed #c7d2fe;
+    padding-top: 6px;
+    margin-top: 4px;
+}
+
+.horario-sugerido-row .horario-tag-label,
+.horario-sugerido-row .horario-val {
+    color: #3730a3;
+}
+
+/* Bloque Destacado de Dirección */
+.direccion-atencion-box {
+    background-color: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 16px;
+}
+
+.dir-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #1e40af;
+    letter-spacing: 0.02em;
+}
+
+.dir-calle {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1e3a8a;
+}
+
+.dir-barrio {
+    font-size: 0.78rem;
+    color: #3b82f6;
+}
+
+.dir-info-extra {
+    font-size: 0.75rem;
+    color: #475569;
+    font-style: italic;
+    margin-top: 2px;
+}
+
+.card-prov-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.precio-duracion-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.tarifa-congelada {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.duracion-congelada {
+    font-size: 0.76rem;
+    color: #059669;
+    font-weight: 600;
+}
+
+.btn-ver-detalle-prov {
+    background-color: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-ver-detalle-prov:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* Modal Detalle Proveedor */
+.modal-prov-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.modal-seccion-bloque {
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.modal-seccion-bloque h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.modal-seccion-bloque p {
+    margin: 0 0 4px 0;
+    font-size: 0.88rem;
+    color: #374151;
+}
+
+.condiciones-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.sub-txt {
+    font-size: 0.74rem;
+    color: #6b7280;
+    display: block;
+}
+
+.val-txt {
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+.sugerida-alerta-txt {
+    color: #3730a3;
+    font-weight: 600;
+}
+
+.fechas-audit-txt {
+    font-size: 0.76rem !important;
+    color: #9ca3af !important;
+    margin-top: 4px !important;
+}
+
+.observaciones-txt {
+    font-style: italic;
+    color: #4b5563;
+}
+
+.modal-rechazo-bloque {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.modal-rechazo-bloque h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #991b1b;
+}
+
+.modal-rechazo-bloque p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #7f1d1d;
+}
