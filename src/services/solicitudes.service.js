@@ -52,5 +52,15 @@ export const solicitudesService = {
             method: 'PATCH',
             body: JSON.stringify({ fecha_hora_sugerida })
         });
+    },
+
+    responderContrapropuesta: async (idSolicitud, decision, motivo_rechazo_cancelacion = null) => {
+        const payload = decision === 'rechazar'
+            ? { decision, motivo_rechazo_cancelacion }
+            : { decision };
+        return await apiClient(`/solicitudes/${idSolicitud}/responder-contrapropuesta`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload)
+        });
     }
 };
