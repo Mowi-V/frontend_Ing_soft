@@ -525,3 +525,83 @@
     color: #6b7280;
     text-align: right;
 }
+
+/* Acciones y modal de contrapropuesta HU-017 */
+.btn-contraproponer-prov {
+    background-color: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #3730a3;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-contraproponer-prov:hover:not(:disabled) {
+    background-color: #e0e7ff;
+    border-color: #a5b4fc;
+}
+
+.btn-contraproponer-prov:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.btn-contraproponer-confirmar {
+    background-color: #4338ca;
+    border: 1px solid #4338ca;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-contraproponer-confirmar:hover:not(:disabled) {
+    background-color: #3730a3;
+    border-color: #3730a3;
+}
+
+.btn-contraproponer-confirmar:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.resumen-original-box {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.resumen-original-box p {
+    margin: 0 0 4px 0;
+    font-size: 0.84rem;
+    color: #374151;
+}
+
+.resumen-original-box p:last-child {
+    margin-bottom: 0;
+}
+
+.input-datetime-contrapropuesta {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: #111827;
+}
+
+.input-datetime-contrapropuesta:focus {
+    outline: none;
+    border-color: #4338ca;
+    box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.15);
+}

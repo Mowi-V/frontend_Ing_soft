@@ -45,5 +45,12 @@ export const solicitudesService = {
             method: 'PATCH',
             body: JSON.stringify({ motivo_rechazo_cancelacion })
         });
+    },
+
+    contraproponerSolicitud: async (idSolicitud, fecha_hora_sugerida) => {
+        return await apiClient(`/solicitudes/${idSolicitud}/contraproponer`, {
+            method: 'PATCH',
+            body: JSON.stringify({ fecha_hora_sugerida })
+        });
     }
 };

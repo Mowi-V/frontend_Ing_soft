@@ -23,6 +23,10 @@ export default function SolicitudesProveedor() {
     const [solicitudARechazar, setSolicitudARechazar] = useState(null);
     const [motivoRechazo, setMotivoRechazo] = useState('');
     const [errorModalRechazo, setErrorModalRechazo] = useState(null);
+    const [solicitudAContraproponer, setSolicitudAContraproponer] = useState(null);
+    const [fechaSugeridaInput, setFechaSugeridaInput] = useState('');
+    const [minFechaLocal, setMinFechaLocal] = useState('');
+    const [errorModalContrapropuesta, setErrorModalContrapropuesta] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [procesandoId, setProcesandoId] = useState(null);
     const [mensaje, setMensaje] = useState(null);
@@ -110,6 +114,68 @@ export default function SolicitudesProveedor() {
             await cargarSolicitudes(filtroSeleccionado);
         } catch (err) {
             setErrorModalRechazo(err.message || 'No fue posible rechazar la solicitud');
+            if (err.status === 409) {
+                await cargarSolicitudes(filtroSeleccionado);
+            }
+        } finally {
+            setProcesandoId(null);
+        }
+    };
+
+    const obtenerMinFechaLocal = () => {
+        const d = new Date(Date.now() + 60 * 1000);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${y}-${m}-${day}T${h}:${min}`;
+    };
+
+    const abrirModalContrapropuesta = (solicitud) => {
+        setSolicitudAContraproponer(solicitud);
+        setFechaSugeridaInput('');
+        setMinFechaLocal(obtenerMinFechaLocal());
+        setErrorModalContrapropuesta(null);
+    };
+
+    const cerrarModalContrapropuesta = () => {
+        if (procesandoId === solicitudAContraproponer?.id_solicitud) return;
+        setSolicitudAContraproponer(null);
+        setFechaSugeridaInput('');
+        setErrorModalContrapropuesta(null);
+    };
+
+    const handleConfirmarContrapropuesta = async (e) => {
+        e.preventDefault();
+        if (!solicitudAContraproponer) return;
+
+        if (!fechaSugeridaInput) {
+            setErrorModalContrapropuesta('Debes seleccionar una nueva fecha y hora.');
+            return;
+        }
+
+        setProcesandoId(solicitudAContraproponer.id_solicitud);
+        setErrorModalContrapropuesta(null);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const data = await solicitudesService.contraproponerSolicitud(
+                solicitudAContraproponer.id_solicitud,
+                fechaSugeridaInput
+            );
+            setMensaje(data.msg || `Contrapropuesta enviada para la solicitud #${solicitudAContraproponer.id_solicitud}.`);
+
+            if (solicitudSeleccionada?.id_solicitud === solicitudAContraproponer.id_solicitud) {
+                setSolicitudSeleccionada(null);
+            }
+            setSolicitudAContraproponer(null);
+            setFechaSugeridaInput('');
+
+            await cargarSolicitudes(filtroSeleccionado);
+        } catch (err) {
+            setErrorModalContrapropuesta(err.message || 'No fue posible enviar la contrapropuesta');
             if (err.status === 409) {
                 await cargarSolicitudes(filtroSeleccionado);
             }
@@ -225,14 +291,24 @@ export default function SolicitudesProveedor() {
                                         </div>
                                         <div className="acciones-card-prov">
                                             {s.estado === ESTADOS_SOLICITUD.PENDIENTE && (
-                                                <button
-                                                    type="button"
-                                                    className="btn-aceptar-prov"
-                                                    onClick={() => handleAceptarSolicitud(s)}
-                                                    disabled={procesandoId === s.id_solicitud}
-                                                >
-                                                    {procesandoId === s.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
-                                                </button>
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-aceptar-prov"
+                                                        onClick={() => handleAceptarSolicitud(s)}
+                                                        disabled={procesandoId === s.id_solicitud}
+                                                    >
+                                                        {procesandoId === s.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-contraproponer-prov"
+                                                        onClick={() => abrirModalContrapropuesta(s)}
+                                                        disabled={procesandoId === s.id_solicitud}
+                                                    >
+                                                        Proponer Horario
+                                                    </button>
+                                                </>
                                             )}
                                             {(s.estado === ESTADOS_SOLICITUD.PENDIENTE || s.estado === ESTADOS_SOLICITUD.SUGERIDA) && (
                                                 <button
@@ -337,14 +413,24 @@ export default function SolicitudesProveedor() {
 
                             <div className="modal-footer modal-footer-acciones">
                                 {solicitudSeleccionada.estado === ESTADOS_SOLICITUD.PENDIENTE && (
-                                    <button
-                                        type="button"
-                                        className="btn-aceptar-prov"
-                                        onClick={() => handleAceptarSolicitud(solicitudSeleccionada)}
-                                        disabled={procesandoId === solicitudSeleccionada.id_solicitud}
-                                    >
-                                        {procesandoId === solicitudSeleccionada.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
-                                    </button>
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="btn-aceptar-prov"
+                                            onClick={() => handleAceptarSolicitud(solicitudSeleccionada)}
+                                            disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                        >
+                                            {procesandoId === solicitudSeleccionada.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn-contraproponer-prov"
+                                            onClick={() => abrirModalContrapropuesta(solicitudSeleccionada)}
+                                            disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                        >
+                                            Proponer Horario
+                                        </button>
+                                    </>
                                 )}
                                 {(solicitudSeleccionada.estado === ESTADOS_SOLICITUD.PENDIENTE ||
                                     solicitudSeleccionada.estado === ESTADOS_SOLICITUD.SUGERIDA) && (
@@ -423,6 +509,79 @@ export default function SolicitudesProveedor() {
                                         disabled={procesandoId === solicitudARechazar.id_solicitud}
                                     >
                                         {procesandoId === solicitudARechazar.id_solicitud ? 'Rechazando...' : 'Confirmar Rechazo'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODAL DE CONTRAPROPUESTA HORARIA (HU-017) */}
+                {solicitudAContraproponer && (
+                    <div className="modal-overlay" onClick={cerrarModalContrapropuesta}>
+                        <div className="modal-prov-card modal-rechazo-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <div>
+                                    <span className="modal-sub-id">Contrapropuesta · Solicitud #{solicitudAContraproponer.id_solicitud}</span>
+                                    <h3>{solicitudAContraproponer.nombre_servicio_c}</h3>
+                                </div>
+                                <button type="button" className="btn-close-modal" onClick={cerrarModalContrapropuesta}>
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleConfirmarContrapropuesta} className="modal-rechazo-form">
+                                <div className="modal-body-scroll">
+                                    <div className="resumen-original-box">
+                                        <p>
+                                            <strong>Horario solicitado por el cliente:</strong>{' '}
+                                            {formatearFechaHora(solicitudAContraproponer.fecha_hora_solicitada)}
+                                        </p>
+                                        <p>
+                                            <strong>Duración del servicio:</strong> {solicitudAContraproponer.duracion_minutos_c} minutos
+                                        </p>
+                                    </div>
+
+                                    <p className="rechazo-instruccion">
+                                        Propón una nueva fecha y hora dentro de tu disponibilidad habitual sin cruces con citas confirmadas.
+                                    </p>
+
+                                    {errorModalContrapropuesta && (
+                                        <div className="modal-error-inline" role="alert">
+                                            {errorModalContrapropuesta}
+                                        </div>
+                                    )}
+
+                                    <div className="campo-motivo-group">
+                                        <label htmlFor="fecha-sugerida-input">Nueva fecha y hora propuesta *</label>
+                                        <input
+                                            id="fecha-sugerida-input"
+                                            type="datetime-local"
+                                            className="input-datetime-contrapropuesta"
+                                            min={minFechaLocal}
+                                            value={fechaSugeridaInput}
+                                            onChange={(e) => setFechaSugeridaInput(e.target.value)}
+                                            disabled={procesandoId === solicitudAContraproponer.id_solicitud}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="modal-footer modal-footer-acciones">
+                                    <button
+                                        type="button"
+                                        className="btn-modal-cerrar"
+                                        onClick={cerrarModalContrapropuesta}
+                                        disabled={procesandoId === solicitudAContraproponer.id_solicitud}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn-contraproponer-confirmar"
+                                        disabled={procesandoId === solicitudAContraproponer.id_solicitud}
+                                    >
+                                        {procesandoId === solicitudAContraproponer.id_solicitud ? 'Enviando...' : 'Enviar Contrapropuesta'}
                                     </button>
                                 </div>
                             </form>
