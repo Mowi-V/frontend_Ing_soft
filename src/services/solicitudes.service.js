@@ -55,7 +55,7 @@ export const solicitudesService = {
     },
 
     responderContrapropuesta: async (idSolicitud, decision, motivo_rechazo_cancelacion = null) => {
-        const payload = decision === 'rechazar'
+        const payload = decision === 'rechazar' && motivo_rechazo_cancelacion
             ? { decision, motivo_rechazo_cancelacion }
             : { decision };
         return await apiClient(`/solicitudes/${idSolicitud}/responder-contrapropuesta`, {

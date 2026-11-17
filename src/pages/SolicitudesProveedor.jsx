@@ -388,17 +388,15 @@ export default function SolicitudesProveedor() {
                                                     >
                                                         Proponer Horario
                                                     </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-rechazar-prov"
+                                                        onClick={() => abrirModalRechazo(s)}
+                                                        disabled={procesandoId === s.id_solicitud}
+                                                    >
+                                                        Rechazar
+                                                    </button>
                                                 </>
-                                            )}
-                                            {(s.estado === ESTADOS_SOLICITUD.PENDIENTE || s.estado === ESTADOS_SOLICITUD.SUGERIDA) && (
-                                                <button
-                                                    type="button"
-                                                    className="btn-rechazar-prov"
-                                                    onClick={() => abrirModalRechazo(s)}
-                                                    disabled={procesandoId === s.id_solicitud}
-                                                >
-                                                    Rechazar
-                                                </button>
                                             )}
                                             {s.estado === ESTADOS_SOLICITUD.ACEPTADA && (
                                                 <>
@@ -530,18 +528,15 @@ export default function SolicitudesProveedor() {
                                         >
                                             Proponer Horario
                                         </button>
+                                        <button
+                                            type="button"
+                                            className="btn-rechazar-prov"
+                                            onClick={() => abrirModalRechazo(solicitudSeleccionada)}
+                                            disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                        >
+                                            Rechazar
+                                        </button>
                                     </>
-                                )}
-                                {(solicitudSeleccionada.estado === ESTADOS_SOLICITUD.PENDIENTE ||
-                                    solicitudSeleccionada.estado === ESTADOS_SOLICITUD.SUGERIDA) && (
-                                    <button
-                                        type="button"
-                                        className="btn-rechazar-prov"
-                                        onClick={() => abrirModalRechazo(solicitudSeleccionada)}
-                                        disabled={procesandoId === solicitudSeleccionada.id_solicitud}
-                                    >
-                                        Rechazar
-                                    </button>
                                 )}
                                 {solicitudSeleccionada.estado === ESTADOS_SOLICITUD.ACEPTADA && (
                                     <>

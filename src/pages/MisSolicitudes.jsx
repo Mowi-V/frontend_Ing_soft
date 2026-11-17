@@ -87,10 +87,6 @@ export default function MisSolicitudes() {
         if (!solicitudARechazarContra) return;
 
         const motivoLimpio = motivoRechazoContra.trim();
-        if (!motivoLimpio) {
-            setErrorModalRechazoContra('Debes indicar el motivo para rechazar la contrapropuesta.');
-            return;
-        }
         if (motivoLimpio.length > 255) {
             setErrorModalRechazoContra('El motivo no puede superar los 255 caracteres.');
             return;
@@ -105,7 +101,7 @@ export default function MisSolicitudes() {
             const data = await solicitudesService.responderContrapropuesta(
                 solicitudARechazarContra.id_solicitud,
                 'rechazar',
-                motivoLimpio
+                motivoLimpio || null
             );
             setMensaje(data.msg || `Contrapropuesta rechazada y solicitud #${solicitudARechazarContra.id_solicitud} cancelada.`);
 
@@ -484,7 +480,7 @@ export default function MisSolicitudes() {
                                     )}
 
                                     <div className="campo-motivo-cliente-group">
-                                        <label htmlFor="motivo-rechazo-contra-input">Motivo de rechazo *</label>
+                                        <label htmlFor="motivo-rechazo-contra-input">Motivo de rechazo (opcional)</label>
                                         <textarea
                                             id="motivo-rechazo-contra-input"
                                             className="textarea-motivo-cliente"
@@ -494,7 +490,6 @@ export default function MisSolicitudes() {
                                             onChange={(e) => setMotivoRechazoContra(e.target.value)}
                                             placeholder="Ej. El horario sugerido no me es posible por cruce con mis actividades."
                                             disabled={procesandoId === solicitudARechazarContra.id_solicitud}
-                                            required
                                         />
                                         <span className="contador-caracteres-cliente">{motivoRechazoContra.length}/255 caracteres</span>
                                     </div>
