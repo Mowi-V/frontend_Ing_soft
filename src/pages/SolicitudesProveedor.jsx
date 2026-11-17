@@ -3,6 +3,7 @@ import NavbarProveedor from '../components/NavbarProveedor';
 import Alerta from '../components/common/Alerta';
 import EstadoBadge from '../components/common/EstadoBadge';
 import { solicitudesService } from '../services/solicitudes.service';
+import { ESTADOS_SOLICITUD } from '../utils/constants';
 import './SolicitudesProveedor.css';
 
 const FILTROS = [
@@ -20,6 +21,8 @@ export default function SolicitudesProveedor() {
     const [filtroSeleccionado, setFiltroSeleccionado] = useState('P'); // Prioriza 'Pendientes' por defecto
     const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
     const [cargando, setCargando] = useState(true);
+    const [procesandoId, setProcesandoId] = useState(null);
+    const [mensaje, setMensaje] = useState(null);
     const [error, setError] = useState(null);
 
     const cargarSolicitudes = async (filtro) => {
@@ -32,6 +35,30 @@ export default function SolicitudesProveedor() {
             setError(err.message || 'Error al cargar las solicitudes recibidas');
         } finally {
             setCargando(false);
+        }
+    };
+
+    const handleAceptarSolicitud = async (solicitud) => {
+        setProcesandoId(solicitud.id_solicitud);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const data = await solicitudesService.aceptarSolicitud(solicitud.id_solicitud);
+            setMensaje(data.msg || `Solicitud #${solicitud.id_solicitud} aceptada y confirmada en tu agenda.`);
+
+            if (solicitudSeleccionada?.id_solicitud === solicitud.id_solicitud) {
+                setSolicitudSeleccionada(null);
+            }
+
+            await cargarSolicitudes(filtroSeleccionado);
+        } catch (err) {
+            setError(err.message || 'No fue posible aceptar la solicitud');
+            if (err.status === 409) {
+                await cargarSolicitudes(filtroSeleccionado);
+            }
+        } finally {
+            setProcesandoId(null);
         }
     };
 
@@ -63,6 +90,7 @@ export default function SolicitudesProveedor() {
                     </div>
                 </header>
 
+                <Alerta tipo="exito" mensaje={mensaje} onClose={() => setMensaje(null)} />
                 <Alerta tipo="error" mensaje={error} onClose={() => setError(null)} />
 
                 {/* BARRA DE FILTROS */}
@@ -139,13 +167,25 @@ export default function SolicitudesProveedor() {
                                             <span className="tarifa-congelada">${Number(s.precio_c).toLocaleString()} COP</span>
                                             <span className="duracion-congelada">⏱ {s.duracion_minutos_c} minutos</span>
                                         </div>
-                                        <button
-                                            type="button"
-                                            className="btn-ver-detalle-prov"
-                                            onClick={() => setSolicitudSeleccionada(s)}
-                                        >
-                                            Ver Detalles
-                                        </button>
+                                        <div className="acciones-card-prov">
+                                            {s.estado === ESTADOS_SOLICITUD.PENDIENTE && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-aceptar-prov"
+                                                    onClick={() => handleAceptarSolicitud(s)}
+                                                    disabled={procesandoId === s.id_solicitud}
+                                                >
+                                                    {procesandoId === s.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                className="btn-ver-detalle-prov"
+                                                onClick={() => setSolicitudSeleccionada(s)}
+                                            >
+                                                Ver Detalles
+                                            </button>
+                                        </div>
                                     </div>
                                 </article>
                             );
@@ -229,7 +269,17 @@ export default function SolicitudesProveedor() {
                                 )}
                             </div>
 
-                            <div className="modal-footer">
+                            <div className="modal-footer modal-footer-acciones">
+                                {solicitudSeleccionada.estado === ESTADOS_SOLICITUD.PENDIENTE && (
+                                    <button
+                                        type="button"
+                                        className="btn-aceptar-prov"
+                                        onClick={() => handleAceptarSolicitud(solicitudSeleccionada)}
+                                        disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                    >
+                                        {procesandoId === solicitudSeleccionada.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
+                                    </button>
+                                )}
                                 <button type="button" className="btn-modal-cerrar" onClick={() => setSolicitudSeleccionada(null)}>
                                     Cerrar Detalle
                                 </button>

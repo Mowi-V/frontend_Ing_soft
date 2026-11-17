@@ -378,3 +378,41 @@
     font-size: 0.88rem;
     color: #7f1d1d;
 }
+
+/* Acciones HU-015 en tarjetas y modal */
+.acciones-card-prov {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn-aceptar-prov {
+    background-color: #059669;
+    border: 1px solid #059669;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-aceptar-prov:hover:not(:disabled) {
+    background-color: #047857;
+    border-color: #047857;
+}
+
+.btn-aceptar-prov:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.modal-footer-acciones {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}

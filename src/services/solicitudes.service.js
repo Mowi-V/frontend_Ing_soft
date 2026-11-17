@@ -32,5 +32,11 @@ export const solicitudesService = {
         return await apiClient(`/solicitudes/recibidas/${idSolicitud}`, {
             method: 'GET'
         });
+    },
+
+    aceptarSolicitud: async (idSolicitud) => {
+        return await apiClient(`/solicitudes/${idSolicitud}/aceptar`, {
+            method: 'PATCH'
+        });
     }
 };
