@@ -62,5 +62,18 @@ export const solicitudesService = {
             method: 'PATCH',
             body: JSON.stringify(payload)
         });
+    },
+
+    cancelarSolicitud: async (idSolicitud, motivo_rechazo_cancelacion) => {
+        return await apiClient(`/solicitudes/${idSolicitud}/cancelar`, {
+            method: 'PATCH',
+            body: JSON.stringify({ motivo_rechazo_cancelacion })
+        });
+    },
+
+    finalizarSolicitud: async (idSolicitud) => {
+        return await apiClient(`/solicitudes/${idSolicitud}/finalizar`, {
+            method: 'PATCH'
+        });
     }
 };

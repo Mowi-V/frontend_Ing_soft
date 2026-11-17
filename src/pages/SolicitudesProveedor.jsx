@@ -27,6 +27,9 @@ export default function SolicitudesProveedor() {
     const [fechaSugeridaInput, setFechaSugeridaInput] = useState('');
     const [minFechaLocal, setMinFechaLocal] = useState('');
     const [errorModalContrapropuesta, setErrorModalContrapropuesta] = useState(null);
+    const [solicitudACancelar, setSolicitudACancelar] = useState(null);
+    const [motivoCancelacion, setMotivoCancelacion] = useState('');
+    const [errorModalCancelacion, setErrorModalCancelacion] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [procesandoId, setProcesandoId] = useState(null);
     const [mensaje, setMensaje] = useState(null);
@@ -184,6 +187,83 @@ export default function SolicitudesProveedor() {
         }
     };
 
+    const abrirModalCancelacion = (solicitud) => {
+        setSolicitudACancelar(solicitud);
+        setMotivoCancelacion('');
+        setErrorModalCancelacion(null);
+    };
+
+    const cerrarModalCancelacion = () => {
+        if (procesandoId === solicitudACancelar?.id_solicitud) return;
+        setSolicitudACancelar(null);
+        setMotivoCancelacion('');
+        setErrorModalCancelacion(null);
+    };
+
+    const handleConfirmarCancelacion = async (e) => {
+        e.preventDefault();
+        if (!solicitudACancelar) return;
+
+        const motivoLimpio = motivoCancelacion.trim();
+        if (!motivoLimpio) {
+            setErrorModalCancelacion('Debes indicar el motivo de la cancelación para informar al cliente.');
+            return;
+        }
+        if (motivoLimpio.length > 255) {
+            setErrorModalCancelacion('El motivo no puede superar los 255 caracteres.');
+            return;
+        }
+
+        setProcesandoId(solicitudACancelar.id_solicitud);
+        setErrorModalCancelacion(null);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const data = await solicitudesService.cancelarSolicitud(solicitudACancelar.id_solicitud, motivoLimpio);
+            setMensaje(data.msg || `Reserva #${solicitudACancelar.id_solicitud} cancelada.`);
+
+            if (solicitudSeleccionada?.id_solicitud === solicitudACancelar.id_solicitud) {
+                setSolicitudSeleccionada(null);
+            }
+            setSolicitudACancelar(null);
+            setMotivoCancelacion('');
+
+            await cargarSolicitudes(filtroSeleccionado);
+        } catch (err) {
+            setErrorModalCancelacion(err.message || 'No fue posible cancelar la reserva');
+            if (err.status === 409) {
+                await cargarSolicitudes(filtroSeleccionado);
+            }
+        } finally {
+            setProcesandoId(null);
+        }
+    };
+
+    const handleFinalizarSolicitud = async (solicitud) => {
+        setProcesandoId(solicitud.id_solicitud);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const data = await solicitudesService.finalizarSolicitud(solicitud.id_solicitud);
+            setMensaje(data.msg || `Servicio #${solicitud.id_solicitud} marcado como finalizado.`);
+
+            if (solicitudSeleccionada?.id_solicitud === solicitud.id_solicitud) {
+                setSolicitudSeleccionada(null);
+            }
+
+            await cargarSolicitudes(filtroSeleccionado);
+        } catch (err) {
+            setError(err.message || 'No fue posible finalizar el servicio');
+            if (err.status === 409) {
+                await cargarSolicitudes(filtroSeleccionado);
+            }
+        } finally {
+            setProcesandoId(null);
+        }
+    };
+
     useEffect(() => {
         cargarSolicitudes(filtroSeleccionado);
     }, [filtroSeleccionado]);
@@ -320,6 +400,26 @@ export default function SolicitudesProveedor() {
                                                     Rechazar
                                                 </button>
                                             )}
+                                            {s.estado === ESTADOS_SOLICITUD.ACEPTADA && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-finalizar-prov"
+                                                        onClick={() => handleFinalizarSolicitud(s)}
+                                                        disabled={procesandoId === s.id_solicitud}
+                                                    >
+                                                        {procesandoId === s.id_solicitud ? 'Finalizando...' : 'Marcar Finalizado'}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-rechazar-prov"
+                                                        onClick={() => abrirModalCancelacion(s)}
+                                                        disabled={procesandoId === s.id_solicitud}
+                                                    >
+                                                        Cancelar Reserva
+                                                    </button>
+                                                </>
+                                            )}
                                             <button
                                                 type="button"
                                                 className="btn-ver-detalle-prov"
@@ -442,6 +542,26 @@ export default function SolicitudesProveedor() {
                                     >
                                         Rechazar
                                     </button>
+                                )}
+                                {solicitudSeleccionada.estado === ESTADOS_SOLICITUD.ACEPTADA && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="btn-finalizar-prov"
+                                            onClick={() => handleFinalizarSolicitud(solicitudSeleccionada)}
+                                            disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                        >
+                                            {procesandoId === solicitudSeleccionada.id_solicitud ? 'Finalizando...' : 'Marcar Finalizado'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn-rechazar-prov"
+                                            onClick={() => abrirModalCancelacion(solicitudSeleccionada)}
+                                            disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                        >
+                                            Cancelar Reserva
+                                        </button>
+                                    </>
                                 )}
                                 <button type="button" className="btn-modal-cerrar" onClick={() => setSolicitudSeleccionada(null)}>
                                     Cerrar Detalle
@@ -582,6 +702,71 @@ export default function SolicitudesProveedor() {
                                         disabled={procesandoId === solicitudAContraproponer.id_solicitud}
                                     >
                                         {procesandoId === solicitudAContraproponer.id_solicitud ? 'Enviando...' : 'Enviar Contrapropuesta'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODAL DE CANCELACIÓN DE RESERVA (HU-019) */}
+                {solicitudACancelar && (
+                    <div className="modal-overlay" onClick={cerrarModalCancelacion}>
+                        <div className="modal-prov-card modal-rechazo-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <div>
+                                    <span className="modal-sub-id">Cancelar Reserva #{solicitudACancelar.id_solicitud}</span>
+                                    <h3>{solicitudACancelar.nombre_servicio_c}</h3>
+                                </div>
+                                <button type="button" className="btn-close-modal" onClick={cerrarModalCancelacion}>
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleConfirmarCancelacion} className="modal-rechazo-form">
+                                <div className="modal-body-scroll">
+                                    <p className="rechazo-instruccion">
+                                        Al cancelar esta reserva confirmada se notificará el motivo al cliente y el horario quedará nuevamente libre en tu agenda.
+                                    </p>
+
+                                    {errorModalCancelacion && (
+                                        <div className="modal-error-inline" role="alert">
+                                            {errorModalCancelacion}
+                                        </div>
+                                    )}
+
+                                    <div className="campo-motivo-group">
+                                        <label htmlFor="motivo-cancelacion-prov-input">Motivo de cancelación *</label>
+                                        <textarea
+                                            id="motivo-cancelacion-prov-input"
+                                            className="textarea-motivo"
+                                            rows="4"
+                                            maxLength={255}
+                                            value={motivoCancelacion}
+                                            onChange={(e) => setMotivoCancelacion(e.target.value)}
+                                            placeholder="Ej. Incapacidad médica o contratiempo de fuerza mayor."
+                                            disabled={procesandoId === solicitudACancelar.id_solicitud}
+                                            required
+                                        />
+                                        <span className="contador-caracteres">{motivoCancelacion.length}/255 caracteres</span>
+                                    </div>
+                                </div>
+
+                                <div className="modal-footer modal-footer-acciones">
+                                    <button
+                                        type="button"
+                                        className="btn-modal-cerrar"
+                                        onClick={cerrarModalCancelacion}
+                                        disabled={procesandoId === solicitudACancelar.id_solicitud}
+                                    >
+                                        Volver
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn-rechazar-confirmar"
+                                        disabled={procesandoId === solicitudACancelar.id_solicitud}
+                                    >
+                                        {procesandoId === solicitudACancelar.id_solicitud ? 'Cancelando...' : 'Confirmar Cancelación'}
                                     </button>
                                 </div>
                             </form>

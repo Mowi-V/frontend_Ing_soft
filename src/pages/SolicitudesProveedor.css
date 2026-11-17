@@ -605,3 +605,26 @@
     border-color: #4338ca;
     box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.15);
 }
+
+/* Botón finalización HU-020 */
+.btn-finalizar-prov {
+    background-color: #065f46;
+    border: 1px solid #065f46;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-finalizar-prov:hover:not(:disabled) {
+    background-color: #064e3b;
+    border-color: #064e3b;
+}
+
+.btn-finalizar-prov:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

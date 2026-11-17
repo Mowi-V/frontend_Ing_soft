@@ -24,6 +24,9 @@ export default function MisSolicitudes() {
     const [solicitudARechazarContra, setSolicitudARechazarContra] = useState(null);
     const [motivoRechazoContra, setMotivoRechazoContra] = useState('');
     const [errorModalRechazoContra, setErrorModalRechazoContra] = useState(null);
+    const [solicitudACancelar, setSolicitudACancelar] = useState(null);
+    const [motivoCancelacion, setMotivoCancelacion] = useState('');
+    const [errorModalCancelacion, setErrorModalCancelacion] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [procesandoId, setProcesandoId] = useState(null);
     const [mensaje, setMensaje] = useState(null);
@@ -115,6 +118,59 @@ export default function MisSolicitudes() {
             await cargarSolicitudes(filtroSeleccionado);
         } catch (err) {
             setErrorModalRechazoContra(err.message || 'No fue posible rechazar la contrapropuesta');
+            if (err.status === 409) {
+                await cargarSolicitudes(filtroSeleccionado);
+            }
+        } finally {
+            setProcesandoId(null);
+        }
+    };
+
+    const abrirModalCancelacion = (solicitud) => {
+        setSolicitudACancelar(solicitud);
+        setMotivoCancelacion('');
+        setErrorModalCancelacion(null);
+    };
+
+    const cerrarModalCancelacion = () => {
+        if (procesandoId === solicitudACancelar?.id_solicitud) return;
+        setSolicitudACancelar(null);
+        setMotivoCancelacion('');
+        setErrorModalCancelacion(null);
+    };
+
+    const handleConfirmarCancelacion = async (e) => {
+        e.preventDefault();
+        if (!solicitudACancelar) return;
+
+        const motivoLimpio = motivoCancelacion.trim();
+        if (!motivoLimpio) {
+            setErrorModalCancelacion('Debes indicar el motivo de la cancelación.');
+            return;
+        }
+        if (motivoLimpio.length > 255) {
+            setErrorModalCancelacion('El motivo no puede superar los 255 caracteres.');
+            return;
+        }
+
+        setProcesandoId(solicitudACancelar.id_solicitud);
+        setErrorModalCancelacion(null);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const data = await solicitudesService.cancelarSolicitud(solicitudACancelar.id_solicitud, motivoLimpio);
+            setMensaje(data.msg || `Solicitud #${solicitudACancelar.id_solicitud} cancelada.`);
+
+            if (solicitudSeleccionada?.id_solicitud === solicitudACancelar.id_solicitud) {
+                setSolicitudSeleccionada(null);
+            }
+            setSolicitudACancelar(null);
+            setMotivoCancelacion('');
+
+            await cargarSolicitudes(filtroSeleccionado);
+        } catch (err) {
+            setErrorModalCancelacion(err.message || 'No fue posible cancelar la solicitud');
             if (err.status === 409) {
                 await cargarSolicitudes(filtroSeleccionado);
             }
@@ -249,6 +305,16 @@ export default function MisSolicitudes() {
                                                     </button>
                                                 </>
                                             )}
+                                            {(s.estado === ESTADOS_SOLICITUD.PENDIENTE || s.estado === ESTADOS_SOLICITUD.ACEPTADA) && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-rechazar-contra"
+                                                    onClick={() => abrirModalCancelacion(s)}
+                                                    disabled={procesandoId === s.id_solicitud}
+                                                >
+                                                    {s.estado === ESTADOS_SOLICITUD.ACEPTADA ? 'Cancelar Reserva' : 'Cancelar'}
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 className="btn-ver-detalle-solic"
@@ -365,6 +431,17 @@ export default function MisSolicitudes() {
                                         </button>
                                     </>
                                 )}
+                                {(solicitudSeleccionada.estado === ESTADOS_SOLICITUD.PENDIENTE ||
+                                    solicitudSeleccionada.estado === ESTADOS_SOLICITUD.ACEPTADA) && (
+                                    <button
+                                        type="button"
+                                        className="btn-rechazar-contra"
+                                        onClick={() => abrirModalCancelacion(solicitudSeleccionada)}
+                                        disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                    >
+                                        {solicitudSeleccionada.estado === ESTADOS_SOLICITUD.ACEPTADA ? 'Cancelar Reserva' : 'Cancelar'}
+                                    </button>
+                                )}
                                 <button type="button" className="btn-modal-cerrar" onClick={() => setSolicitudSeleccionada(null)}>
                                     Cerrar Detalle
                                 </button>
@@ -438,6 +515,73 @@ export default function MisSolicitudes() {
                                         disabled={procesandoId === solicitudARechazarContra.id_solicitud}
                                     >
                                         {procesandoId === solicitudARechazarContra.id_solicitud ? 'Procesando...' : 'Rechazar y Cancelar'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODAL DE CANCELACIÓN DE SOLICITUD O RESERVA (HU-019) */}
+                {solicitudACancelar && (
+                    <div className="modal-overlay" onClick={cerrarModalCancelacion}>
+                        <div className="modal-solicitud-card modal-rechazo-contra-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <div>
+                                    <span className="modal-sub-id">Cancelar Solicitud #{solicitudACancelar.id_solicitud}</span>
+                                    <h3>{solicitudACancelar.nombre_servicio_c}</h3>
+                                </div>
+                                <button type="button" className="btn-close-modal" onClick={cerrarModalCancelacion}>
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleConfirmarCancelacion} className="modal-rechazo-contra-form">
+                                <div className="modal-body-scroll">
+                                    <p className="contra-instruccion">
+                                        {solicitudACancelar.estado === ESTADOS_SOLICITUD.ACEPTADA
+                                            ? 'Esta cita ya estaba confirmada. Al cancelarla se notificará al profesional y se liberará el horario en su agenda.'
+                                            : 'Indica el motivo por el cual deseas cancelar esta solicitud.'}
+                                    </p>
+
+                                    {errorModalCancelacion && (
+                                        <div className="modal-error-cliente-inline" role="alert">
+                                            {errorModalCancelacion}
+                                        </div>
+                                    )}
+
+                                    <div className="campo-motivo-cliente-group">
+                                        <label htmlFor="motivo-cancelacion-cliente-input">Motivo de cancelación *</label>
+                                        <textarea
+                                            id="motivo-cancelacion-cliente-input"
+                                            className="textarea-motivo-cliente"
+                                            rows="4"
+                                            maxLength={255}
+                                            value={motivoCancelacion}
+                                            onChange={(e) => setMotivoCancelacion(e.target.value)}
+                                            placeholder="Ej. Surgió un imprevisto personal y necesito reprogramar más adelante."
+                                            disabled={procesandoId === solicitudACancelar.id_solicitud}
+                                            required
+                                        />
+                                        <span className="contador-caracteres-cliente">{motivoCancelacion.length}/255 caracteres</span>
+                                    </div>
+                                </div>
+
+                                <div className="modal-footer modal-footer-cliente-acciones">
+                                    <button
+                                        type="button"
+                                        className="btn-modal-cerrar"
+                                        onClick={cerrarModalCancelacion}
+                                        disabled={procesandoId === solicitudACancelar.id_solicitud}
+                                    >
+                                        Volver
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn-rechazar-contra-confirmar"
+                                        disabled={procesandoId === solicitudACancelar.id_solicitud}
+                                    >
+                                        {procesandoId === solicitudACancelar.id_solicitud ? 'Cancelando...' : 'Confirmar Cancelación'}
                                     </button>
                                 </div>
                             </form>
