@@ -20,6 +20,9 @@ export default function SolicitudesProveedor() {
     const [solicitudes, setSolicitudes] = useState([]);
     const [filtroSeleccionado, setFiltroSeleccionado] = useState('P'); // Prioriza 'Pendientes' por defecto
     const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
+    const [solicitudARechazar, setSolicitudARechazar] = useState(null);
+    const [motivoRechazo, setMotivoRechazo] = useState('');
+    const [errorModalRechazo, setErrorModalRechazo] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [procesandoId, setProcesandoId] = useState(null);
     const [mensaje, setMensaje] = useState(null);
@@ -54,6 +57,59 @@ export default function SolicitudesProveedor() {
             await cargarSolicitudes(filtroSeleccionado);
         } catch (err) {
             setError(err.message || 'No fue posible aceptar la solicitud');
+            if (err.status === 409) {
+                await cargarSolicitudes(filtroSeleccionado);
+            }
+        } finally {
+            setProcesandoId(null);
+        }
+    };
+
+    const abrirModalRechazo = (solicitud) => {
+        setSolicitudARechazar(solicitud);
+        setMotivoRechazo('');
+        setErrorModalRechazo(null);
+    };
+
+    const cerrarModalRechazo = () => {
+        if (procesandoId === solicitudARechazar?.id_solicitud) return;
+        setSolicitudARechazar(null);
+        setMotivoRechazo('');
+        setErrorModalRechazo(null);
+    };
+
+    const handleConfirmarRechazo = async (e) => {
+        e.preventDefault();
+        if (!solicitudARechazar) return;
+
+        const motivoLimpio = motivoRechazo.trim();
+        if (!motivoLimpio) {
+            setErrorModalRechazo('Debes indicar el motivo del rechazo para informar al cliente.');
+            return;
+        }
+        if (motivoLimpio.length > 255) {
+            setErrorModalRechazo('El motivo no puede superar los 255 caracteres.');
+            return;
+        }
+
+        setProcesandoId(solicitudARechazar.id_solicitud);
+        setErrorModalRechazo(null);
+        setError(null);
+        setMensaje(null);
+
+        try {
+            const data = await solicitudesService.rechazarSolicitud(solicitudARechazar.id_solicitud, motivoLimpio);
+            setMensaje(data.msg || `Solicitud #${solicitudARechazar.id_solicitud} rechazada.`);
+
+            if (solicitudSeleccionada?.id_solicitud === solicitudARechazar.id_solicitud) {
+                setSolicitudSeleccionada(null);
+            }
+            setSolicitudARechazar(null);
+            setMotivoRechazo('');
+
+            await cargarSolicitudes(filtroSeleccionado);
+        } catch (err) {
+            setErrorModalRechazo(err.message || 'No fue posible rechazar la solicitud');
             if (err.status === 409) {
                 await cargarSolicitudes(filtroSeleccionado);
             }
@@ -178,6 +234,16 @@ export default function SolicitudesProveedor() {
                                                     {procesandoId === s.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
                                                 </button>
                                             )}
+                                            {(s.estado === ESTADOS_SOLICITUD.PENDIENTE || s.estado === ESTADOS_SOLICITUD.SUGERIDA) && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-rechazar-prov"
+                                                    onClick={() => abrirModalRechazo(s)}
+                                                    disabled={procesandoId === s.id_solicitud}
+                                                >
+                                                    Rechazar
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 className="btn-ver-detalle-prov"
@@ -280,10 +346,86 @@ export default function SolicitudesProveedor() {
                                         {procesandoId === solicitudSeleccionada.id_solicitud ? 'Confirmando...' : 'Aceptar Cita'}
                                     </button>
                                 )}
+                                {(solicitudSeleccionada.estado === ESTADOS_SOLICITUD.PENDIENTE ||
+                                    solicitudSeleccionada.estado === ESTADOS_SOLICITUD.SUGERIDA) && (
+                                    <button
+                                        type="button"
+                                        className="btn-rechazar-prov"
+                                        onClick={() => abrirModalRechazo(solicitudSeleccionada)}
+                                        disabled={procesandoId === solicitudSeleccionada.id_solicitud}
+                                    >
+                                        Rechazar
+                                    </button>
+                                )}
                                 <button type="button" className="btn-modal-cerrar" onClick={() => setSolicitudSeleccionada(null)}>
                                     Cerrar Detalle
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODAL DE RECHAZO CON MOTIVO OBLIGATORIO (HU-016) */}
+                {solicitudARechazar && (
+                    <div className="modal-overlay" onClick={cerrarModalRechazo}>
+                        <div className="modal-prov-card modal-rechazo-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <div>
+                                    <span className="modal-sub-id">Rechazar Solicitud #{solicitudARechazar.id_solicitud}</span>
+                                    <h3>{solicitudARechazar.nombre_servicio_c}</h3>
+                                </div>
+                                <button type="button" className="btn-close-modal" onClick={cerrarModalRechazo}>
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleConfirmarRechazo} className="modal-rechazo-form">
+                                <div className="modal-body-scroll">
+                                    <p className="rechazo-instruccion">
+                                        Indica el motivo por el cual no puedes atender esta solicitud. Este mensaje será visible para el cliente.
+                                    </p>
+
+                                    {errorModalRechazo && (
+                                        <div className="modal-error-inline" role="alert">
+                                            {errorModalRechazo}
+                                        </div>
+                                    )}
+
+                                    <div className="campo-motivo-group">
+                                        <label htmlFor="motivo-rechazo-input">Motivo del rechazo *</label>
+                                        <textarea
+                                            id="motivo-rechazo-input"
+                                            className="textarea-motivo"
+                                            rows="4"
+                                            maxLength={255}
+                                            value={motivoRechazo}
+                                            onChange={(e) => setMotivoRechazo(e.target.value)}
+                                            placeholder="Ej. Zona fuera de mi cobertura habitual o disponibilidad ocupada en ese horario."
+                                            disabled={procesandoId === solicitudARechazar.id_solicitud}
+                                            required
+                                        />
+                                        <span className="contador-caracteres">{motivoRechazo.length}/255 caracteres</span>
+                                    </div>
+                                </div>
+
+                                <div className="modal-footer modal-footer-acciones">
+                                    <button
+                                        type="button"
+                                        className="btn-modal-cerrar"
+                                        onClick={cerrarModalRechazo}
+                                        disabled={procesandoId === solicitudARechazar.id_solicitud}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn-rechazar-confirmar"
+                                        disabled={procesandoId === solicitudARechazar.id_solicitud}
+                                    >
+                                        {procesandoId === solicitudARechazar.id_solicitud ? 'Rechazando...' : 'Confirmar Rechazo'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}

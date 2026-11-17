@@ -38,5 +38,12 @@ export const solicitudesService = {
         return await apiClient(`/solicitudes/${idSolicitud}/aceptar`, {
             method: 'PATCH'
         });
+    },
+
+    rechazarSolicitud: async (idSolicitud, motivo_rechazo_cancelacion) => {
+        return await apiClient(`/solicitudes/${idSolicitud}/rechazar`, {
+            method: 'PATCH',
+            body: JSON.stringify({ motivo_rechazo_cancelacion })
+        });
     }
 };

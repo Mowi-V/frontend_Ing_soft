@@ -416,3 +416,112 @@
     align-items: center;
     gap: 10px;
 }
+
+/* Acciones y modal de rechazo HU-016 */
+.btn-rechazar-prov {
+    background-color: #ffffff;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #b91c1c;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-rechazar-prov:hover:not(:disabled) {
+    background-color: #fee2e2;
+    border-color: #f87171;
+}
+
+.btn-rechazar-prov:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.btn-rechazar-confirmar {
+    background-color: #dc2626;
+    border: 1px solid #dc2626;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-rechazar-confirmar:hover:not(:disabled) {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.btn-rechazar-confirmar:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.modal-rechazo-card {
+    max-width: 480px;
+}
+
+.modal-rechazo-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.rechazo-instruccion {
+    margin: 0 0 12px 0;
+    font-size: 0.88rem;
+    color: #4b5563;
+    line-height: 1.45;
+}
+
+.modal-error-inline {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.campo-motivo-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.campo-motivo-group label {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.textarea-motivo {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: #111827;
+    resize: vertical;
+    min-height: 92px;
+}
+
+.textarea-motivo:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.12);
+}
+
+.contador-caracteres {
+    font-size: 0.74rem;
+    color: #6b7280;
+    text-align: right;
+}
