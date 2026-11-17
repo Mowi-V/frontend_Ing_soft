@@ -8,10 +8,11 @@ import './SolicitudesProveedor.css';
 const FILTROS = [
     { id: 'TODOS', label: 'Todas' },
     { id: 'P', label: 'Pendientes' },
-    { id: 'A', label: 'Aceptadas' },
     { id: 'S', label: 'Sugeridas' },
+    { id: 'A', label: 'Aceptadas' },
     { id: 'F', label: 'Finalizadas' },
-    { id: 'C', label: 'Canceladas / Rechazadas' }
+    { id: 'R', label: 'Rechazadas' },
+    { id: 'C', label: 'Canceladas' }
 ];
 
 export default function SolicitudesProveedor() {

@@ -13,6 +13,8 @@ export const ESTADOS_SERVICIO = {
 export const ESTADOS_SOLICITUD = {
     PENDIENTE: 'P',
     ACEPTADA: 'A',
+    SUGERIDA: 'S',
+    RECHAZADA: 'R',
     CANCELADA: 'C',
     FINALIZADA: 'F'
 };

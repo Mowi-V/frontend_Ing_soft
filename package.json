@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:public": "vite build && node -e \"const fs=require('fs'),p=require('path');const src=p.resolve('dist'),dst=p.resolve('../Ingsoftware/public');fs.rmSync(dst,{recursive:true,force:true});fs.cpSync(src,dst,{recursive:true});\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
