@@ -257,3 +257,196 @@
 .btn-del-bloqueo:hover {
     background-color: #fee2e2;
 }
+
+/* Agenda operativa de compromisos confirmados (HU-019) */
+.agenda-compromisos-section {
+    margin-bottom: 24px;
+}
+
+.agenda-compromisos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.agenda-compromisos-header .section-help {
+    margin-bottom: 0;
+}
+
+.btn-gestionar-bandeja {
+    background-color: #f3f4f6;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.15s ease;
+}
+
+.btn-gestionar-bandeja:hover {
+    background-color: #e5e7eb;
+}
+
+.agenda-compromisos-empty {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background-color: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 18px 20px;
+}
+
+.agenda-compromisos-empty span {
+    font-size: 1.8rem;
+}
+
+.agenda-compromisos-empty strong {
+    display: block;
+    font-size: 0.94rem;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.agenda-compromisos-empty p {
+    margin: 0;
+    font-size: 0.83rem;
+    color: #6b7280;
+}
+
+.agenda-dias-grupos {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 12px;
+}
+
+.agenda-dia-bloque {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.agenda-dia-titulo {
+    margin: 0;
+    padding: 10px 16px;
+    background-color: #f3f4f6;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: capitalize;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.agenda-citas-lista {
+    display: flex;
+    flex-direction: column;
+}
+
+.agenda-cita-item {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    background-color: #ffffff;
+}
+
+.agenda-cita-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 640px) {
+    .agenda-cita-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+.agenda-cita-horario {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-right: 2px solid #dcfce7;
+    padding-right: 12px;
+}
+
+@media (max-width: 640px) {
+    .agenda-cita-horario {
+        border-right: none;
+        border-bottom: 1px solid #f3f4f6;
+        padding-right: 0;
+        padding-bottom: 8px;
+    }
+}
+
+.cita-rango-hora {
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: #166534;
+}
+
+.cita-duracion-tag {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #059669;
+}
+
+.cita-orden-tag {
+    font-size: 0.74rem;
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.agenda-cita-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cita-top-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cita-top-line h4 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.cita-precio-tag {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.cita-cliente-txt,
+.cita-direccion-txt,
+.cita-extra-txt,
+.cita-obs-txt {
+    margin: 0;
+    font-size: 0.83rem;
+    color: #374151;
+}
+
+.cita-direccion-txt {
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.cita-extra-txt,
+.cita-obs-txt {
+    color: #6b7280;
+    font-style: italic;
+}

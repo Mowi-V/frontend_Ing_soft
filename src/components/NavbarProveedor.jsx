@@ -27,7 +27,7 @@ export default function NavbarProveedor() {
                     Bandeja de Solicitudes
                 </Link>
                 <Link to="/agenda-proveedor" className="dash-prov-nav-link">
-                    Mi Disponibilidad
+                    Mi Agenda
                 </Link>
                 <Link to="/perfil-proveedor" className="dash-prov-user-link">
                     <span className="dash-prov-avatar"></span>

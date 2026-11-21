@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import NavbarProveedor from '../components/NavbarProveedor';
 import Alerta from '../components/common/Alerta';
 import { disponibilidadService } from '../services/disponibilidad.service';
+import { solicitudesService } from '../services/solicitudes.service';
 import './AgendaProveedor.css';
 
 const DIAS_SEMANA = [
@@ -17,6 +19,7 @@ const DIAS_SEMANA = [
 export default function AgendaProveedor() {
     const [disponibilidad, setDisponibilidad] = useState([]);
     const [periodos, setPeriodos] = useState([]);
+    const [compromisos, setCompromisos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [guardandoFranja, setGuardandoFranja] = useState(false);
     const [guardandoBloqueo, setGuardandoBloqueo] = useState(false);
@@ -38,11 +41,15 @@ export default function AgendaProveedor() {
         setCargando(true);
         setError(null);
         try {
-            const data = await disponibilidadService.obtenerMiDisponibilidad();
-            setDisponibilidad(data.disponibilidad || []);
-            setPeriodos(data.periodos_no_disponibles || []);
+            const [dataDisp, dataAgenda] = await Promise.all([
+                disponibilidadService.obtenerMiDisponibilidad(),
+                solicitudesService.obtenerAgendaProveedor()
+            ]);
+            setDisponibilidad(dataDisp.disponibilidad || []);
+            setPeriodos(dataDisp.periodos_no_disponibles || []);
+            setCompromisos(dataAgenda.agenda || []);
         } catch (err) {
-            setError(err.message || 'Error al cargar los horarios de disponibilidad');
+            setError(err.message || 'Error al cargar los horarios y compromisos de tu agenda');
         } finally {
             setCargando(false);
         }
@@ -125,23 +132,115 @@ export default function AgendaProveedor() {
         return String(fechaStr).slice(0, 10);
     };
 
+    const formatearFechaDia = (ymd) => {
+        if (!ymd) return 'Fecha por confirmar';
+        const d = new Date(`${ymd}T12:00:00`);
+        if (Number.isNaN(d.getTime())) return ymd;
+        return d.toLocaleDateString('es-CO', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    const compromisosPorDia = compromisos.reduce((acc, item) => {
+        const clave = item.fecha || 'Sin fecha';
+        if (!acc[clave]) acc[clave] = [];
+        acc[clave].push(item);
+        return acc;
+    }, {});
+
     return (
         <div className="agenda-wrapper">
             <NavbarProveedor />
 
             <main className="agenda-container">
                 <header className="agenda-header">
-                    <h1>Mi Disponibilidad y Agenda</h1>
-                    <p>Configura tus días de atención regular y bloquea periodos de vacaciones o descansos.</p>
+                    <h1>Mi Agenda y Disponibilidad</h1>
+                    <p>Consulta tus compromisos confirmados en orden cronológico y configura tu horario habitual y descansos.</p>
                 </header>
 
                 <Alerta tipo="exito" mensaje={mensaje} onClose={() => setMensaje(null)} />
                 <Alerta tipo="error" mensaje={error} onClose={() => setError(null)} />
 
                 {cargando ? (
-                    <p className="agenda-loading">Cargando configuración de horarios...</p>
+                    <p className="agenda-loading">Cargando agenda y configuración de horarios...</p>
                 ) : (
-                    <div className="agenda-grid-layout">
+                    <>
+                        {/* AGENDA OPERATIVA DE COMPROMISOS CONFIRMADOS (HU-019) */}
+                        <section className="agenda-card agenda-compromisos-section">
+                            <div className="agenda-compromisos-header">
+                                <div>
+                                    <h2>Agenda de Servicios Confirmados ({compromisos.length})</h2>
+                                    <p className="section-help">
+                                        Próximas atenciones aceptadas en orden cronológico (no incluye solicitudes pendientes, rechazadas ni canceladas).
+                                    </p>
+                                </div>
+                                <Link to="/solicitudes-proveedor" className="btn-gestionar-bandeja">
+                                    Gestionar en Bandeja →
+                                </Link>
+                            </div>
+
+                            {compromisos.length === 0 ? (
+                                <div className="agenda-compromisos-empty">
+                                    <span>📅</span>
+                                    <div>
+                                        <strong>No tienes servicios confirmados en tu agenda</strong>
+                                        <p>Cuando aceptes solicitudes o el cliente confirme una contrapropuesta, aparecerán aquí organizadas por fecha y hora.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="agenda-dias-grupos">
+                                    {Object.entries(compromisosPorDia).map(([fechaDia, citasDia]) => (
+                                        <div key={fechaDia} className="agenda-dia-bloque">
+                                            <h3 className="agenda-dia-titulo">{formatearFechaDia(fechaDia)}</h3>
+                                            <div className="agenda-citas-lista">
+                                                {citasDia.map((cita) => {
+                                                    const nombreCliente = cita.cliente
+                                                        ? `${cita.cliente.nombre} ${cita.cliente.apellido || ''}`.trim()
+                                                        : 'Cliente registrado';
+                                                    return (
+                                                        <article key={cita.id_solicitud} className="agenda-cita-item">
+                                                            <div className="agenda-cita-horario">
+                                                                <span className="cita-rango-hora">
+                                                                    {cita.hora_inicio} - {cita.hora_fin}
+                                                                </span>
+                                                                <span className="cita-duracion-tag">⏱ {cita.duracion_minutos_c} min</span>
+                                                                <span className="cita-orden-tag">Cita #{cita.id_solicitud}</span>
+                                                            </div>
+
+                                                            <div className="agenda-cita-detalle">
+                                                                <div className="cita-top-line">
+                                                                    <h4>{cita.nombre_servicio_c}</h4>
+                                                                    <span className="cita-precio-tag">${Number(cita.precio_c).toLocaleString()} COP</span>
+                                                                </div>
+                                                                <p className="cita-cliente-txt">
+                                                                    👤 <strong>{nombreCliente}</strong>
+                                                                    {cita.cliente?.correo_electronico ? ` · ${cita.cliente.correo_electronico}` : ''}
+                                                                </p>
+                                                                <p className="cita-direccion-txt">
+                                                                    📍 {cita.direccion_atencion} — {cita.barrio_sector}
+                                                                    {cita.comuna ? ` (${cita.comuna})` : ''}
+                                                                </p>
+                                                                {cita.informacion_complementaria && (
+                                                                    <p className="cita-extra-txt">Indicaciones: {cita.informacion_complementaria}</p>
+                                                                )}
+                                                                {cita.observaciones && (
+                                                                    <p className="cita-obs-txt">Observaciones: {cita.observaciones}</p>
+                                                                )}
+                                                            </div>
+                                                        </article>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+
+                        <div className="agenda-grid-layout">
                         {/* SECCIÓN 1: DÍAS Y FRANJAS SEMANALES */}
                         <section className="agenda-card">
                             <h2>1. Horario Semanal Habitual</h2>
@@ -283,6 +382,7 @@ export default function AgendaProveedor() {
                             </div>
                         </section>
                     </div>
+                    </>
                 )}
             </main>
         </div>

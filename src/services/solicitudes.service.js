@@ -75,5 +75,11 @@ export const solicitudesService = {
         return await apiClient(`/solicitudes/${idSolicitud}/finalizar`, {
             method: 'PATCH'
         });
+    },
+
+    obtenerAgendaProveedor: async () => {
+        return await apiClient('/solicitudes/agenda', {
+            method: 'GET'
+        });
     }
 };
