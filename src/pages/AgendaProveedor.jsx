@@ -129,7 +129,16 @@ export default function AgendaProveedor() {
 
     const formatearFecha = (fechaStr) => {
         if (!fechaStr) return '';
-        return String(fechaStr).slice(0, 10);
+        const str = String(fechaStr).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        const d = new Date(str);
+        if (Number.isNaN(d.getTime())) return str.slice(0, 10);
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Bogota',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(d);
     };
 
     const formatearFechaDia = (ymd) => {

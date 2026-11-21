@@ -202,10 +202,34 @@ export default function DetalleServicio() {
 
     const formatearFecha = (fechaStr) => {
         if (!fechaStr) return '';
-        return String(fechaStr).slice(0, 10);
+        const str = String(fechaStr).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        const d = new Date(str);
+        if (Number.isNaN(d.getTime())) return str.slice(0, 10);
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Bogota',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(d);
     };
 
-    const fechaMinima = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    const obtenerFechaMinimaColombia = () => {
+        const d = new Date(Date.now() + 5 * 60 * 1000);
+        const partes = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Bogota',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23'
+        }).formatToParts(d);
+        const mapa = Object.fromEntries(partes.map(p => [p.type, p.value]));
+        return `${mapa.year}-${mapa.month}-${mapa.day}T${mapa.hour}:${mapa.minute}`;
+    };
+
+    const fechaMinima = obtenerFechaMinimaColombia();
 
     return (
         <div className="detalle-serv-wrapper">
